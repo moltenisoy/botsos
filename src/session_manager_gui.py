@@ -541,6 +541,13 @@ class SessionManagerGUI(QMainWindow):
         self.config_tabs.addTab(self._create_contingency_tab(), "🛡️ Contingencia")
         self.config_tabs.addTab(self._create_advanced_behavior_tab(), "⚡ Comportamiento Avanzado")
         self.config_tabs.addTab(self._create_system_hiding_tab(), "🔐 Ocultación del Sistema")
+        # Pestañas de Fase 5
+        self.config_tabs.addTab(self._create_scaling_tab(), "☁️ Escalabilidad/Cloud")
+        self.config_tabs.addTab(self._create_performance_tab(), "⚡ Rendimiento")
+        self.config_tabs.addTab(self._create_ml_evasion_tab(), "🧠 Evasión ML")
+        self.config_tabs.addTab(self._create_scheduling_tab(), "⏰ Programación")
+        self.config_tabs.addTab(self._create_analytics_tab(), "📊 Analíticas")
+        self.config_tabs.addTab(self._create_accounts_tab(), "👤 Cuentas")
         self.config_tabs.addTab(self._create_logging_tab(), "📝 Registros")
         layout.addWidget(self.config_tabs)
         
@@ -1397,6 +1404,803 @@ class SessionManagerGUI(QMainWindow):
         layout.addStretch()
         return tab
     
+    # ===========================================
+    # PESTAÑAS DE FASE 5 - Escalabilidad y Características Avanzadas
+    # ===========================================
+    
+    def _create_scaling_tab(self) -> QWidget:
+        """Crear la pestaña de configuración de escalabilidad/cloud (de fase5.txt)."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        
+        # Configuración de Docker
+        docker_group = QGroupBox("Contenedorización Docker")
+        docker_layout = QFormLayout(docker_group)
+        
+        self.docker_enabled = QCheckBox("Habilitar Docker para Sesiones Aisladas")
+        docker_layout.addRow(self.docker_enabled)
+        
+        self.docker_image = QLineEdit()
+        self.docker_image.setText("botsos:latest")
+        self.docker_image.setPlaceholderText("botsos:latest")
+        docker_layout.addRow("Imagen Docker:", self.docker_image)
+        
+        self.docker_network = QComboBox()
+        self.docker_network.addItems(["bridge", "host", "none"])
+        docker_layout.addRow("Modo de Red:", self.docker_network)
+        
+        docker_info = QLabel(
+            "ℹ️ Requiere Docker Desktop para Windows instalado.\n"
+            "Permite ejecutar sesiones en contenedores aislados."
+        )
+        docker_info.setWordWrap(True)
+        docker_info.setStyleSheet("color: #808080; font-size: 10px;")
+        docker_layout.addRow(docker_info)
+        
+        layout.addWidget(docker_group)
+        
+        # Configuración de AWS Cloud
+        aws_group = QGroupBox("Integración AWS Cloud")
+        aws_layout = QFormLayout(aws_group)
+        
+        self.aws_enabled = QCheckBox("Habilitar Migración a AWS")
+        aws_layout.addRow(self.aws_enabled)
+        
+        self.aws_region = QComboBox()
+        self.aws_region.addItems([
+            "us-east-1", "us-west-2", "eu-west-1",
+            "sa-east-1", "ap-southeast-1"
+        ])
+        aws_layout.addRow("Región AWS:", self.aws_region)
+        
+        self.aws_instance_type = QComboBox()
+        self.aws_instance_type.addItems([
+            "t3.micro", "t3.small", "t3.medium", "t3.large"
+        ])
+        self.aws_instance_type.setCurrentText("t3.medium")
+        aws_layout.addRow("Tipo de Instancia:", self.aws_instance_type)
+        
+        self.aws_ami_id = QLineEdit()
+        self.aws_ami_id.setPlaceholderText("ami-xxxxxxxx (AMI de Windows)")
+        aws_layout.addRow("ID de AMI:", self.aws_ami_id)
+        
+        aws_info = QLabel(
+            "⚠️ Requiere credenciales de AWS configuradas.\n"
+            "Use 'aws configure' para configurar credenciales."
+        )
+        aws_info.setWordWrap(True)
+        aws_info.setStyleSheet("color: #ffa500; font-size: 10px;")
+        aws_layout.addRow(aws_info)
+        
+        layout.addWidget(aws_group)
+        
+        # Configuración de Auto-Escalado
+        scaling_group = QGroupBox("Auto-Escalado")
+        scaling_layout = QFormLayout(scaling_group)
+        
+        self.auto_scale_enabled = QCheckBox("Habilitar Auto-Escalado")
+        scaling_layout.addRow(self.auto_scale_enabled)
+        
+        self.ram_threshold = QSpinBox()
+        self.ram_threshold.setRange(50, 95)
+        self.ram_threshold.setValue(85)
+        self.ram_threshold.setSuffix(" %")
+        scaling_layout.addRow("Umbral de RAM:", self.ram_threshold)
+        
+        self.cpu_threshold = QSpinBox()
+        self.cpu_threshold.setRange(50, 95)
+        self.cpu_threshold.setValue(80)
+        self.cpu_threshold.setSuffix(" %")
+        scaling_layout.addRow("Umbral de CPU:", self.cpu_threshold)
+        
+        self.max_local_sessions = QSpinBox()
+        self.max_local_sessions.setRange(1, 20)
+        self.max_local_sessions.setValue(6)
+        scaling_layout.addRow("Máximo Sesiones Locales:", self.max_local_sessions)
+        
+        self.max_cloud_sessions = QSpinBox()
+        self.max_cloud_sessions.setRange(10, 100)
+        self.max_cloud_sessions.setValue(50)
+        scaling_layout.addRow("Máximo Sesiones Cloud:", self.max_cloud_sessions)
+        
+        layout.addWidget(scaling_group)
+        
+        layout.addStretch()
+        return tab
+    
+    def _create_performance_tab(self) -> QWidget:
+        """Crear la pestaña de configuración de rendimiento (de fase5.txt)."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        
+        # Aceleración GPU
+        gpu_group = QGroupBox("Aceleración GPU")
+        gpu_layout = QFormLayout(gpu_group)
+        
+        self.gpu_acceleration_enabled = QCheckBox("Habilitar Aceleración GPU")
+        gpu_layout.addRow(self.gpu_acceleration_enabled)
+        
+        self.gpu_backend = QComboBox()
+        self.gpu_backend.addItems(["auto", "directml", "rocm"])
+        gpu_layout.addRow("Backend GPU:", self.gpu_backend)
+        
+        gpu_info = QLabel(
+            "ℹ️ DirectML para GPUs AMD/Intel en Windows.\n"
+            "ROCm para GPUs AMD (si está disponible)."
+        )
+        gpu_info.setWordWrap(True)
+        gpu_info.setStyleSheet("color: #808080; font-size: 10px;")
+        gpu_layout.addRow(gpu_info)
+        
+        layout.addWidget(gpu_group)
+        
+        # Procesamiento Async
+        async_group = QGroupBox("Procesamiento Asíncrono")
+        async_layout = QFormLayout(async_group)
+        
+        self.async_batch_size = QSpinBox()
+        self.async_batch_size.setRange(1, 20)
+        self.async_batch_size.setValue(4)
+        async_layout.addRow("Tamaño de Lote Async:", self.async_batch_size)
+        
+        layout.addWidget(async_group)
+        
+        # Caché de LLM
+        cache_group = QGroupBox("Caché de LLM")
+        cache_layout = QFormLayout(cache_group)
+        
+        self.llm_cache_enabled = QCheckBox("Habilitar Caché de Respuestas LLM")
+        self.llm_cache_enabled.setChecked(True)
+        cache_layout.addRow(self.llm_cache_enabled)
+        
+        self.llm_cache_size = QSpinBox()
+        self.llm_cache_size.setRange(100, 10000)
+        self.llm_cache_size.setValue(1000)
+        cache_layout.addRow("Tamaño Máximo de Caché:", self.llm_cache_size)
+        
+        layout.addWidget(cache_group)
+        
+        # Optimización de Memoria
+        memory_group = QGroupBox("Optimización de Memoria")
+        memory_layout = QFormLayout(memory_group)
+        
+        self.memory_optimization_enabled = QCheckBox("Habilitar Optimización de Memoria")
+        self.memory_optimization_enabled.setChecked(True)
+        memory_layout.addRow(self.memory_optimization_enabled)
+        
+        self.gc_interval = QSpinBox()
+        self.gc_interval.setRange(30, 300)
+        self.gc_interval.setValue(60)
+        self.gc_interval.setSuffix(" seg")
+        memory_layout.addRow("Intervalo de GC:", self.gc_interval)
+        
+        layout.addWidget(memory_group)
+        
+        layout.addStretch()
+        return tab
+    
+    def _create_ml_evasion_tab(self) -> QWidget:
+        """Crear la pestaña de evasión con ML (de fase5.txt)."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        
+        # Modelo RL
+        rl_group = QGroupBox("Aprendizaje por Refuerzo (RL)")
+        rl_layout = QFormLayout(rl_group)
+        
+        self.rl_enabled = QCheckBox("Habilitar Adaptación con RL")
+        rl_layout.addRow(self.rl_enabled)
+        
+        self.rl_model_type = QComboBox()
+        self.rl_model_type.addItems(["simple_qlearning", "dqn"])
+        rl_layout.addRow("Tipo de Modelo RL:", self.rl_model_type)
+        
+        self.rl_learning_rate = QDoubleSpinBox()
+        self.rl_learning_rate.setRange(0.001, 0.1)
+        self.rl_learning_rate.setValue(0.01)
+        self.rl_learning_rate.setSingleStep(0.001)
+        rl_layout.addRow("Tasa de Aprendizaje:", self.rl_learning_rate)
+        
+        rl_info = QLabel(
+            "ℹ️ El agente RL aprende a adaptar comportamientos\n"
+            "basándose en el éxito/fracaso de las acciones."
+        )
+        rl_info.setWordWrap(True)
+        rl_info.setStyleSheet("color: #808080; font-size: 10px;")
+        rl_layout.addRow(rl_info)
+        
+        layout.addWidget(rl_group)
+        
+        # Adaptación de Comportamiento
+        adapt_group = QGroupBox("Adaptación de Comportamiento")
+        adapt_layout = QFormLayout(adapt_group)
+        
+        self.adaptive_jitter_enabled = QCheckBox("Jitter Adaptativo")
+        self.adaptive_jitter_enabled.setChecked(True)
+        adapt_layout.addRow(self.adaptive_jitter_enabled)
+        
+        self.adaptive_delay_enabled = QCheckBox("Retrasos Adaptativos")
+        self.adaptive_delay_enabled.setChecked(True)
+        adapt_layout.addRow(self.adaptive_delay_enabled)
+        
+        self.feedback_loop_enabled = QCheckBox("Bucle de Retroalimentación")
+        self.feedback_loop_enabled.setChecked(True)
+        adapt_layout.addRow(self.feedback_loop_enabled)
+        
+        layout.addWidget(adapt_group)
+        
+        # Suplantación Biométrica
+        bio_group = QGroupBox("Suplantación Biométrica")
+        bio_layout = QFormLayout(bio_group)
+        
+        self.biometric_spoof_enabled = QCheckBox("Habilitar Suplantación Biométrica")
+        bio_layout.addRow(self.biometric_spoof_enabled)
+        
+        self.eye_track_simulation = QCheckBox("Simular Seguimiento Ocular")
+        bio_layout.addRow(self.eye_track_simulation)
+        
+        bio_warning = QLabel(
+            "⚠️ Funciones experimentales. Pueden no funcionar\n"
+            "con todas las plataformas de detección."
+        )
+        bio_warning.setWordWrap(True)
+        bio_warning.setStyleSheet("color: #ffa500; font-size: 10px;")
+        bio_layout.addRow(bio_warning)
+        
+        layout.addWidget(bio_group)
+        
+        # Selección de Proxy con ML
+        ml_proxy_group = QGroupBox("Selección de Proxy con ML")
+        ml_proxy_layout = QFormLayout(ml_proxy_group)
+        
+        self.ml_proxy_enabled = QCheckBox("Habilitar Selección ML de Proxy")
+        ml_proxy_layout.addRow(self.ml_proxy_enabled)
+        
+        self.ml_proxy_model = QComboBox()
+        self.ml_proxy_model.addItems(["random_forest", "gradient_boosting"])
+        ml_proxy_layout.addRow("Modelo ML:", self.ml_proxy_model)
+        
+        self.ml_proxy_train_btn = QPushButton("Entrenar Modelo")
+        self.ml_proxy_train_btn.clicked.connect(self._train_ml_proxy_model)
+        ml_proxy_layout.addRow(self.ml_proxy_train_btn)
+        
+        layout.addWidget(ml_proxy_group)
+        
+        layout.addStretch()
+        return tab
+    
+    def _create_scheduling_tab(self) -> QWidget:
+        """Crear la pestaña de programación de tareas (de fase5.txt)."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        
+        # Programación
+        schedule_group = QGroupBox("Programación de Sesiones")
+        schedule_layout = QFormLayout(schedule_group)
+        
+        self.scheduling_enabled = QCheckBox("Habilitar Programación")
+        schedule_layout.addRow(self.scheduling_enabled)
+        
+        self.cron_expression = QLineEdit()
+        self.cron_expression.setPlaceholderText("0 * * * * (cada hora)")
+        schedule_layout.addRow("Expresión Cron:", self.cron_expression)
+        
+        cron_info = QLabel(
+            "Formato: minuto hora día mes día_semana\n"
+            "Ejemplos: '0 * * * *' (cada hora), '*/30 * * * *' (cada 30 min)"
+        )
+        cron_info.setWordWrap(True)
+        cron_info.setStyleSheet("color: #808080; font-size: 10px;")
+        schedule_layout.addRow(cron_info)
+        
+        layout.addWidget(schedule_group)
+        
+        # Ventana de Tiempo
+        window_group = QGroupBox("Ventana de Ejecución")
+        window_layout = QFormLayout(window_group)
+        
+        self.schedule_start_time = QLineEdit()
+        self.schedule_start_time.setPlaceholderText("09:00")
+        window_layout.addRow("Hora de Inicio:", self.schedule_start_time)
+        
+        self.schedule_end_time = QLineEdit()
+        self.schedule_end_time.setPlaceholderText("21:00")
+        window_layout.addRow("Hora de Fin:", self.schedule_end_time)
+        
+        layout.addWidget(window_group)
+        
+        # Cola de Sesiones
+        queue_group = QGroupBox("Cola de Sesiones")
+        queue_layout = QFormLayout(queue_group)
+        
+        self.queue_enabled = QCheckBox("Habilitar Cola de Sesiones")
+        self.queue_enabled.setChecked(True)
+        queue_layout.addRow(self.queue_enabled)
+        
+        self.max_queue_size = QSpinBox()
+        self.max_queue_size.setRange(10, 500)
+        self.max_queue_size.setValue(100)
+        queue_layout.addRow("Tamaño Máximo de Cola:", self.max_queue_size)
+        
+        layout.addWidget(queue_group)
+        
+        # Reinicio Automático
+        restart_group = QGroupBox("Reinicio Automático")
+        restart_layout = QFormLayout(restart_group)
+        
+        self.auto_restart_enabled = QCheckBox("Reiniciar Sesiones Fallidas")
+        self.auto_restart_enabled.setChecked(True)
+        restart_layout.addRow(self.auto_restart_enabled)
+        
+        self.restart_delay = QSpinBox()
+        self.restart_delay.setRange(10, 300)
+        self.restart_delay.setValue(60)
+        self.restart_delay.setSuffix(" seg")
+        restart_layout.addRow("Retraso de Reinicio:", self.restart_delay)
+        
+        layout.addWidget(restart_group)
+        
+        layout.addStretch()
+        return tab
+    
+    def _create_analytics_tab(self) -> QWidget:
+        """Crear la pestaña de analíticas (de fase5.txt)."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        
+        # Prometheus
+        prometheus_group = QGroupBox("Servidor de Métricas Prometheus")
+        prometheus_layout = QFormLayout(prometheus_group)
+        
+        self.prometheus_enabled = QCheckBox("Habilitar Prometheus")
+        prometheus_layout.addRow(self.prometheus_enabled)
+        
+        self.prometheus_port = QSpinBox()
+        self.prometheus_port.setRange(1024, 65535)
+        self.prometheus_port.setValue(9090)
+        prometheus_layout.addRow("Puerto:", self.prometheus_port)
+        
+        self.start_prometheus_btn = QPushButton("Iniciar Servidor de Métricas")
+        self.start_prometheus_btn.clicked.connect(self._start_prometheus_server)
+        prometheus_layout.addRow(self.start_prometheus_btn)
+        
+        layout.addWidget(prometheus_group)
+        
+        # Métricas a Rastrear
+        metrics_group = QGroupBox("Métricas a Rastrear")
+        metrics_layout = QVBoxLayout(metrics_group)
+        
+        self.track_success_rate = QCheckBox("Tasa de Éxito")
+        self.track_success_rate.setChecked(True)
+        metrics_layout.addWidget(self.track_success_rate)
+        
+        self.track_ban_count = QCheckBox("Conteo de Bloqueos")
+        self.track_ban_count.setChecked(True)
+        metrics_layout.addWidget(self.track_ban_count)
+        
+        self.track_session_duration = QCheckBox("Duración de Sesiones")
+        self.track_session_duration.setChecked(True)
+        metrics_layout.addWidget(self.track_session_duration)
+        
+        self.track_proxy_performance = QCheckBox("Rendimiento de Proxies")
+        self.track_proxy_performance.setChecked(True)
+        metrics_layout.addWidget(self.track_proxy_performance)
+        
+        layout.addWidget(metrics_group)
+        
+        # Exportación
+        export_group = QGroupBox("Exportación de Datos")
+        export_layout = QFormLayout(export_group)
+        
+        self.export_csv_enabled = QCheckBox("Exportar Automáticamente a CSV")
+        export_layout.addRow(self.export_csv_enabled)
+        
+        self.export_interval = QSpinBox()
+        self.export_interval.setRange(10, 1440)
+        self.export_interval.setValue(60)
+        self.export_interval.setSuffix(" min")
+        export_layout.addRow("Intervalo de Exportación:", self.export_interval)
+        
+        self.export_now_btn = QPushButton("Exportar Ahora")
+        self.export_now_btn.clicked.connect(self._export_analytics)
+        export_layout.addRow(self.export_now_btn)
+        
+        layout.addWidget(export_group)
+        
+        # Resumen de Métricas
+        summary_group = QGroupBox("Resumen de Métricas")
+        summary_layout = QVBoxLayout(summary_group)
+        
+        self.metrics_summary_text = QTextEdit()
+        self.metrics_summary_text.setReadOnly(True)
+        self.metrics_summary_text.setMaximumHeight(150)
+        self.metrics_summary_text.setPlaceholderText("Las métricas aparecerán aquí...")
+        summary_layout.addWidget(self.metrics_summary_text)
+        
+        refresh_btn = QPushButton("Actualizar Resumen")
+        refresh_btn.clicked.connect(self._refresh_metrics_summary)
+        summary_layout.addWidget(refresh_btn)
+        
+        layout.addWidget(summary_group)
+        
+        layout.addStretch()
+        return tab
+    
+    def _create_accounts_tab(self) -> QWidget:
+        """Crear la pestaña de gestión de cuentas (de fase5.txt)."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        
+        # Gestión de Cuentas
+        accounts_group = QGroupBox("Gestión de Cuentas")
+        accounts_layout = QFormLayout(accounts_group)
+        
+        self.accounts_enabled = QCheckBox("Habilitar Gestión de Cuentas")
+        accounts_layout.addRow(self.accounts_enabled)
+        
+        self.account_rotation_enabled = QCheckBox("Rotación Automática de Cuentas")
+        self.account_rotation_enabled.setChecked(True)
+        accounts_layout.addRow(self.account_rotation_enabled)
+        
+        layout.addWidget(accounts_group)
+        
+        # Importar/Exportar
+        io_group = QGroupBox("Importar/Exportar Cuentas")
+        io_layout = QVBoxLayout(io_group)
+        
+        btn_layout = QHBoxLayout()
+        
+        import_btn = QPushButton("📥 Importar CSV")
+        import_btn.clicked.connect(self._import_accounts)
+        btn_layout.addWidget(import_btn)
+        
+        export_btn = QPushButton("📤 Exportar CSV")
+        export_btn.clicked.connect(self._export_accounts)
+        btn_layout.addWidget(export_btn)
+        
+        io_layout.addLayout(btn_layout)
+        
+        self.encrypt_csv = QCheckBox("Encriptar archivos CSV")
+        self.encrypt_csv.setChecked(True)
+        io_layout.addWidget(self.encrypt_csv)
+        
+        encrypt_info = QLabel(
+            "ℹ️ Los archivos se encriptan con Fernet.\n"
+            "La clave se almacena de forma segura en el keyring del sistema."
+        )
+        encrypt_info.setWordWrap(True)
+        encrypt_info.setStyleSheet("color: #808080; font-size: 10px;")
+        io_layout.addWidget(encrypt_info)
+        
+        layout.addWidget(io_group)
+        
+        # Lista de Cuentas
+        list_group = QGroupBox("Cuentas Registradas")
+        list_layout = QVBoxLayout(list_group)
+        
+        self.accounts_list = QListWidget()
+        self.accounts_list.setMaximumHeight(150)
+        list_layout.addWidget(self.accounts_list)
+        
+        list_btn_layout = QHBoxLayout()
+        
+        add_account_btn = QPushButton("➕ Agregar")
+        add_account_btn.clicked.connect(self._add_account)
+        list_btn_layout.addWidget(add_account_btn)
+        
+        remove_account_btn = QPushButton("🗑️ Eliminar")
+        remove_account_btn.clicked.connect(self._remove_account)
+        list_btn_layout.addWidget(remove_account_btn)
+        
+        list_layout.addLayout(list_btn_layout)
+        
+        layout.addWidget(list_group)
+        
+        # Estadísticas
+        stats_group = QGroupBox("Estadísticas de Cuentas")
+        stats_layout = QFormLayout(stats_group)
+        
+        self.accounts_total_label = QLabel("0")
+        stats_layout.addRow("Total:", self.accounts_total_label)
+        
+        self.accounts_active_label = QLabel("0")
+        stats_layout.addRow("Activas:", self.accounts_active_label)
+        
+        layout.addWidget(stats_group)
+        
+        layout.addStretch()
+        return tab
+    
+    # Métodos auxiliares para las pestañas de FASE 5
+    
+    def _train_ml_proxy_model(self):
+        """Entrenar el modelo ML de selección de proxy."""
+        try:
+            from .ml_proxy_selector import MLProxySelector
+            
+            selector = MLProxySelector(data_dir=self.data_dir / "ml_proxy")
+            if selector.train_model():
+                QMessageBox.information(
+                    self, "Éxito",
+                    "Modelo ML entrenado exitosamente."
+                )
+            else:
+                QMessageBox.warning(
+                    self, "Advertencia",
+                    "No hay suficientes datos para entrenar el modelo.\n"
+                    "Se requieren al menos 100 muestras."
+                )
+        except ImportError as e:
+            QMessageBox.warning(
+                self, "Error",
+                f"No se pudo cargar el módulo ML: {e}"
+            )
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Error",
+                f"Error entrenando modelo: {e}"
+            )
+    
+    def _start_prometheus_server(self):
+        """Iniciar el servidor de métricas Prometheus."""
+        try:
+            from .analytics_manager import AnalyticsManager
+            
+            if not hasattr(self, '_analytics_manager'):
+                self._analytics_manager = AnalyticsManager(
+                    data_dir=self.data_dir / "analytics",
+                    prometheus_port=self.prometheus_port.value()
+                )
+            
+            if self._analytics_manager.start_prometheus_server():
+                QMessageBox.information(
+                    self, "Éxito",
+                    f"Servidor de métricas iniciado en puerto {self.prometheus_port.value()}"
+                )
+            else:
+                QMessageBox.warning(
+                    self, "Advertencia",
+                    "No se pudo iniciar el servidor de métricas.\n"
+                    "Verifique que prometheus_client esté instalado."
+                )
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Error",
+                f"Error iniciando servidor: {e}"
+            )
+    
+    def _export_analytics(self):
+        """Exportar analíticas a CSV."""
+        try:
+            from .analytics_manager import AnalyticsManager
+            
+            if not hasattr(self, '_analytics_manager'):
+                self._analytics_manager = AnalyticsManager(
+                    data_dir=self.data_dir / "analytics"
+                )
+            
+            file_path, _ = QFileDialog.getSaveFileName(
+                self, "Exportar Métricas",
+                "metricas.csv", "Archivos CSV (*.csv)"
+            )
+            
+            if file_path:
+                if self._analytics_manager.export_to_csv(Path(file_path)):
+                    QMessageBox.information(
+                        self, "Éxito",
+                        f"Métricas exportadas a {file_path}"
+                    )
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Error",
+                f"Error exportando métricas: {e}"
+            )
+    
+    def _refresh_metrics_summary(self):
+        """Actualizar resumen de métricas."""
+        try:
+            from .analytics_manager import AnalyticsManager
+            
+            if not hasattr(self, '_analytics_manager'):
+                self._analytics_manager = AnalyticsManager(
+                    data_dir=self.data_dir / "analytics"
+                )
+            
+            summary = self._analytics_manager.get_summary_report()
+            
+            text = f"""📊 Resumen de Métricas
+═══════════════════════
+Sesiones:
+  • Total: {summary['sessions']['total']}
+  • Activas: {summary['sessions']['active']}
+  • Completadas: {summary['sessions']['completed']}
+
+Acciones:
+  • Total: {summary['actions']['total']}
+  • Exitosas: {summary['actions']['successful']}
+  • Fallidas: {summary['actions']['failed']}
+  • Tasa de éxito: {summary['actions']['success_rate']:.1%}
+
+Seguridad:
+  • Bloqueos: {summary['security']['bans_detected']}
+  • CAPTCHAs: {summary['security']['captchas_encountered']}
+
+Proxies:
+  • Total: {summary['proxies']['total']}
+  • Activos: {summary['proxies']['active']}
+"""
+            self.metrics_summary_text.setText(text)
+            
+        except Exception as e:
+            self.metrics_summary_text.setText(f"Error cargando métricas: {e}")
+    
+    def _import_accounts(self):
+        """Importar cuentas desde CSV."""
+        try:
+            from .account_manager import AccountManager
+            
+            if not hasattr(self, '_account_manager'):
+                self._account_manager = AccountManager(
+                    data_dir=self.data_dir / "accounts"
+                )
+            
+            file_path, _ = QFileDialog.getOpenFileName(
+                self, "Importar Cuentas",
+                "", "Archivos CSV (*.csv *.enc)"
+            )
+            
+            if file_path:
+                encrypted = file_path.endswith('.enc') or self.encrypt_csv.isChecked()
+                count = self._account_manager.import_from_csv(
+                    Path(file_path),
+                    encrypted=encrypted
+                )
+                
+                self._refresh_accounts_list()
+                QMessageBox.information(
+                    self, "Éxito",
+                    f"Se importaron {count} cuentas."
+                )
+                
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Error",
+                f"Error importando cuentas: {e}"
+            )
+    
+    def _export_accounts(self):
+        """Exportar cuentas a CSV."""
+        try:
+            from .account_manager import AccountManager
+            
+            if not hasattr(self, '_account_manager'):
+                self._account_manager = AccountManager(
+                    data_dir=self.data_dir / "accounts"
+                )
+            
+            extension = ".csv.enc" if self.encrypt_csv.isChecked() else ".csv"
+            file_path, _ = QFileDialog.getSaveFileName(
+                self, "Exportar Cuentas",
+                f"cuentas{extension}",
+                "Archivos CSV (*.csv *.enc)"
+            )
+            
+            if file_path:
+                if self._account_manager.export_to_csv(
+                    Path(file_path),
+                    encrypt=self.encrypt_csv.isChecked()
+                ):
+                    QMessageBox.information(
+                        self, "Éxito",
+                        f"Cuentas exportadas a {file_path}"
+                    )
+                    
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Error",
+                f"Error exportando cuentas: {e}"
+            )
+    
+    def _add_account(self):
+        """Agregar una nueva cuenta."""
+        # Diálogo simple para agregar cuenta
+        from PyQt6.QtWidgets import QDialog, QDialogButtonBox
+        
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Agregar Cuenta")
+        dialog_layout = QFormLayout(dialog)
+        
+        email_edit = QLineEdit()
+        dialog_layout.addRow("Email:", email_edit)
+        
+        password_edit = QLineEdit()
+        password_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        dialog_layout.addRow("Contraseña:", password_edit)
+        
+        username_edit = QLineEdit()
+        dialog_layout.addRow("Usuario (opcional):", username_edit)
+        
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | 
+            QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        dialog_layout.addRow(buttons)
+        
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            try:
+                from .account_manager import AccountManager
+                
+                if not hasattr(self, '_account_manager'):
+                    self._account_manager = AccountManager(
+                        data_dir=self.data_dir / "accounts"
+                    )
+                
+                self._account_manager.add_account(
+                    email=email_edit.text(),
+                    password=password_edit.text(),
+                    username=username_edit.text()
+                )
+                
+                self._refresh_accounts_list()
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error agregando cuenta: {e}")
+    
+    def _remove_account(self):
+        """Eliminar cuenta seleccionada."""
+        current_item = self.accounts_list.currentItem()
+        if not current_item:
+            QMessageBox.warning(self, "Advertencia", "Seleccione una cuenta para eliminar.")
+            return
+        
+        account_id = current_item.data(Qt.ItemDataRole.UserRole)
+        
+        reply = QMessageBox.question(
+            self, "Confirmar",
+            "¿Está seguro de eliminar esta cuenta?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                from .account_manager import AccountManager
+                
+                if hasattr(self, '_account_manager'):
+                    self._account_manager.remove_account(account_id)
+                    self._refresh_accounts_list()
+                    
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error eliminando cuenta: {e}")
+    
+    def _refresh_accounts_list(self):
+        """Actualizar lista de cuentas."""
+        self.accounts_list.clear()
+        
+        try:
+            from .account_manager import AccountManager
+            
+            if not hasattr(self, '_account_manager'):
+                self._account_manager = AccountManager(
+                    data_dir=self.data_dir / "accounts"
+                )
+            
+            accounts = self._account_manager.get_all_accounts()
+            stats = self._account_manager.get_stats()
+            
+            for account in accounts:
+                status = "✅" if account.get('is_active', True) else "❌"
+                item = QListWidgetItem(f"{status} {account['email']}")
+                item.setData(Qt.ItemDataRole.UserRole, account['account_id'])
+                self.accounts_list.addItem(item)
+            
+            self.accounts_total_label.setText(str(stats['total']))
+            self.accounts_active_label.setText(str(stats['active']))
+            
+        except Exception as e:
+            logger.error(f"Error actualizando lista de cuentas: {e}")
+    
     def _create_logging_tab(self) -> QWidget:
         """Crear la pestaña de registros/monitoreo."""
         tab = QWidget()
@@ -1613,6 +2417,87 @@ class SessionManagerGUI(QMainWindow):
         if index >= 0:
             self.mfa_method.setCurrentIndex(index)
         self.mfa_timeout.setValue(mfa.mfa_timeout_sec)
+        
+        # Phase 5 settings - Scaling
+        scaling = session.scaling
+        self.docker_enabled.setChecked(scaling.docker_enabled)
+        self.docker_image.setText(scaling.docker_image)
+        index = self.docker_network.findText(scaling.docker_network_mode)
+        if index >= 0:
+            self.docker_network.setCurrentIndex(index)
+        self.aws_enabled.setChecked(scaling.aws_enabled)
+        index = self.aws_region.findText(scaling.aws_region)
+        if index >= 0:
+            self.aws_region.setCurrentIndex(index)
+        index = self.aws_instance_type.findText(scaling.aws_instance_type)
+        if index >= 0:
+            self.aws_instance_type.setCurrentIndex(index)
+        self.aws_ami_id.setText(scaling.aws_ami_id)
+        self.auto_scale_enabled.setChecked(scaling.auto_scale_enabled)
+        self.ram_threshold.setValue(scaling.ram_threshold_percent)
+        self.cpu_threshold.setValue(scaling.cpu_threshold_percent)
+        self.max_local_sessions.setValue(scaling.max_local_sessions)
+        self.max_cloud_sessions.setValue(scaling.max_cloud_sessions)
+        
+        # Phase 5 settings - Performance
+        performance = session.performance
+        self.gpu_acceleration_enabled.setChecked(performance.gpu_acceleration_enabled)
+        index = self.gpu_backend.findText(performance.gpu_backend)
+        if index >= 0:
+            self.gpu_backend.setCurrentIndex(index)
+        self.async_batch_size.setValue(performance.async_batch_size)
+        self.llm_cache_enabled.setChecked(performance.llm_cache_enabled)
+        self.llm_cache_size.setValue(performance.llm_cache_max_size)
+        self.memory_optimization_enabled.setChecked(performance.memory_optimization_enabled)
+        self.gc_interval.setValue(performance.gc_interval_sec)
+        
+        # Phase 5 settings - ML Evasion
+        ml_evasion = session.ml_evasion
+        self.rl_enabled.setChecked(ml_evasion.rl_enabled)
+        index = self.rl_model_type.findText(ml_evasion.rl_model_type)
+        if index >= 0:
+            self.rl_model_type.setCurrentIndex(index)
+        self.rl_learning_rate.setValue(ml_evasion.rl_learning_rate)
+        self.adaptive_jitter_enabled.setChecked(ml_evasion.adaptive_jitter_enabled)
+        self.adaptive_delay_enabled.setChecked(ml_evasion.adaptive_delay_enabled)
+        self.feedback_loop_enabled.setChecked(ml_evasion.feedback_loop_enabled)
+        self.biometric_spoof_enabled.setChecked(ml_evasion.biometric_spoof_enabled)
+        self.eye_track_simulation.setChecked(ml_evasion.eye_track_simulation)
+        
+        # Phase 5 settings - ML Proxy
+        ml_proxy = session.ml_proxy
+        self.ml_proxy_enabled.setChecked(ml_proxy.ml_selection_enabled)
+        index = self.ml_proxy_model.findText(ml_proxy.model_type)
+        if index >= 0:
+            self.ml_proxy_model.setCurrentIndex(index)
+        
+        # Phase 5 settings - Scheduling
+        scheduling = session.scheduling
+        self.scheduling_enabled.setChecked(scheduling.scheduling_enabled)
+        self.cron_expression.setText(scheduling.cron_expression)
+        self.schedule_start_time.setText(scheduling.start_time)
+        self.schedule_end_time.setText(scheduling.end_time)
+        self.queue_enabled.setChecked(scheduling.session_queue_enabled)
+        self.max_queue_size.setValue(scheduling.max_queue_size)
+        self.auto_restart_enabled.setChecked(scheduling.auto_restart_enabled)
+        self.restart_delay.setValue(scheduling.restart_delay_sec)
+        
+        # Phase 5 settings - Analytics
+        analytics = session.analytics
+        self.prometheus_enabled.setChecked(analytics.prometheus_enabled)
+        self.prometheus_port.setValue(analytics.prometheus_port)
+        self.track_success_rate.setChecked(analytics.track_success_rate)
+        self.track_ban_count.setChecked(analytics.track_ban_count)
+        self.track_session_duration.setChecked(analytics.track_session_duration)
+        self.track_proxy_performance.setChecked(analytics.track_proxy_performance)
+        self.export_csv_enabled.setChecked(analytics.export_csv_enabled)
+        self.export_interval.setValue(analytics.export_interval_min)
+        
+        # Phase 5 settings - Account Management
+        account_mgmt = session.account_management
+        self.accounts_enabled.setChecked(account_mgmt.accounts_enabled)
+        self.account_rotation_enabled.setChecked(account_mgmt.account_rotation_enabled)
+        self.encrypt_csv.setChecked(account_mgmt.encryption_enabled)
     
     def _on_session_name_changed(self, text: str):
         """Manejar cambio de nombre de sesión."""
@@ -1800,6 +2685,68 @@ class SessionManagerGUI(QMainWindow):
         session.mfa.mfa_simulation_enabled = self.mfa_simulation_enabled.isChecked()
         session.mfa.mfa_method = self.mfa_method.currentText()
         session.mfa.mfa_timeout_sec = self.mfa_timeout.value()
+        
+        # Update Phase 5 settings - Scaling
+        session.scaling.docker_enabled = self.docker_enabled.isChecked()
+        session.scaling.docker_image = self.docker_image.text()
+        session.scaling.docker_network_mode = self.docker_network.currentText()
+        session.scaling.aws_enabled = self.aws_enabled.isChecked()
+        session.scaling.aws_region = self.aws_region.currentText()
+        session.scaling.aws_instance_type = self.aws_instance_type.currentText()
+        session.scaling.aws_ami_id = self.aws_ami_id.text()
+        session.scaling.auto_scale_enabled = self.auto_scale_enabled.isChecked()
+        session.scaling.ram_threshold_percent = self.ram_threshold.value()
+        session.scaling.cpu_threshold_percent = self.cpu_threshold.value()
+        session.scaling.max_local_sessions = self.max_local_sessions.value()
+        session.scaling.max_cloud_sessions = self.max_cloud_sessions.value()
+        
+        # Update Phase 5 settings - Performance
+        session.performance.gpu_acceleration_enabled = self.gpu_acceleration_enabled.isChecked()
+        session.performance.gpu_backend = self.gpu_backend.currentText()
+        session.performance.async_batch_size = self.async_batch_size.value()
+        session.performance.llm_cache_enabled = self.llm_cache_enabled.isChecked()
+        session.performance.llm_cache_max_size = self.llm_cache_size.value()
+        session.performance.memory_optimization_enabled = self.memory_optimization_enabled.isChecked()
+        session.performance.gc_interval_sec = self.gc_interval.value()
+        
+        # Update Phase 5 settings - ML Evasion
+        session.ml_evasion.rl_enabled = self.rl_enabled.isChecked()
+        session.ml_evasion.rl_model_type = self.rl_model_type.currentText()
+        session.ml_evasion.rl_learning_rate = self.rl_learning_rate.value()
+        session.ml_evasion.adaptive_jitter_enabled = self.adaptive_jitter_enabled.isChecked()
+        session.ml_evasion.adaptive_delay_enabled = self.adaptive_delay_enabled.isChecked()
+        session.ml_evasion.feedback_loop_enabled = self.feedback_loop_enabled.isChecked()
+        session.ml_evasion.biometric_spoof_enabled = self.biometric_spoof_enabled.isChecked()
+        session.ml_evasion.eye_track_simulation = self.eye_track_simulation.isChecked()
+        
+        # Update Phase 5 settings - ML Proxy
+        session.ml_proxy.ml_selection_enabled = self.ml_proxy_enabled.isChecked()
+        session.ml_proxy.model_type = self.ml_proxy_model.currentText()
+        
+        # Update Phase 5 settings - Scheduling
+        session.scheduling.scheduling_enabled = self.scheduling_enabled.isChecked()
+        session.scheduling.cron_expression = self.cron_expression.text()
+        session.scheduling.start_time = self.schedule_start_time.text()
+        session.scheduling.end_time = self.schedule_end_time.text()
+        session.scheduling.session_queue_enabled = self.queue_enabled.isChecked()
+        session.scheduling.max_queue_size = self.max_queue_size.value()
+        session.scheduling.auto_restart_enabled = self.auto_restart_enabled.isChecked()
+        session.scheduling.restart_delay_sec = self.restart_delay.value()
+        
+        # Update Phase 5 settings - Analytics
+        session.analytics.prometheus_enabled = self.prometheus_enabled.isChecked()
+        session.analytics.prometheus_port = self.prometheus_port.value()
+        session.analytics.track_success_rate = self.track_success_rate.isChecked()
+        session.analytics.track_ban_count = self.track_ban_count.isChecked()
+        session.analytics.track_session_duration = self.track_session_duration.isChecked()
+        session.analytics.track_proxy_performance = self.track_proxy_performance.isChecked()
+        session.analytics.export_csv_enabled = self.export_csv_enabled.isChecked()
+        session.analytics.export_interval_min = self.export_interval.value()
+        
+        # Update Phase 5 settings - Account Management
+        session.account_management.accounts_enabled = self.accounts_enabled.isChecked()
+        session.account_management.account_rotation_enabled = self.account_rotation_enabled.isChecked()
+        session.account_management.encryption_enabled = self.encrypt_csv.isChecked()
         
         # Almacenar clave API de CAPTCHA de forma segura (de fase2.txt)
         api_key = self.captcha_api_key.text()
