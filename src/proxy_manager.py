@@ -2,7 +2,7 @@
 Módulo Administrador de Proxies.
 
 Maneja la gestión del pool de proxies, rotación y validación.
-Diseñado para Windows.
+Diseñado exclusivamente para Windows.
 """
 
 import json
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ProxyEntry:
-    """Represents a single proxy in the pool."""
+    """Representa un proxy individual en el pool."""
     server: str
     port: int
     username: str = ""
@@ -33,7 +33,7 @@ class ProxyEntry:
     
     @property
     def url(self) -> str:
-        """Get the full proxy URL."""
+        """Obtiene la URL completa del proxy."""
         auth = ""
         if self.username and self.password:
             auth = f"{self.username}:{self.password}@"
@@ -41,26 +41,26 @@ class ProxyEntry:
     
     @property
     def success_rate(self) -> float:
-        """Calculate the success rate of this proxy."""
+        """Calcula la tasa de éxito de este proxy."""
         total = self.success_count + self.failure_count
         if total == 0:
             return 1.0
         return self.success_count / total
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary."""
+        """Convierte a diccionario."""
         return asdict(self)
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ProxyEntry':
-        """Create from dictionary."""
+        """Crea desde diccionario."""
         return cls(**data)
     
     @classmethod
     def from_url(cls, url: str) -> 'ProxyEntry':
-        """Parse proxy from URL format.
+        """Parsea proxy desde formato URL.
         
-        Supports formats:
+        Soporta formatos:
         - http://host:port
         - http://user:pass@host:port
         - socks5://host:port
@@ -99,13 +99,13 @@ class ProxyEntry:
 
 
 class ProxyManager:
-    """Manages a pool of proxies with rotation and health tracking."""
+    """Administra un pool de proxies con rotación y seguimiento de salud."""
     
     def __init__(self, data_dir: Path):
-        """Initialize the proxy manager.
+        """Inicializa el administrador de proxies.
         
         Args:
-            data_dir: Directory for storing proxy data.
+            data_dir: Directorio para almacenar datos de proxies.
         """
         self.data_dir = Path(data_dir)
         self.proxies_file = self.data_dir / "proxies.json"
@@ -115,11 +115,11 @@ class ProxyManager:
         self._load_proxies()
     
     def _ensure_data_dir(self) -> None:
-        """Ensure the data directory exists."""
+        """Asegura que el directorio de datos existe."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
     
     def _load_proxies(self) -> None:
-        """Load proxies from storage."""
+        """Carga proxies desde almacenamiento."""
         if self.proxies_file.exists():
             try:
                 with open(self.proxies_file, 'r', encoding='utf-8') as f:
@@ -131,7 +131,7 @@ class ProxyManager:
                 logger.error(f"Error loading proxies: {e}")
     
     def _save_proxies(self) -> None:
-        """Save proxies to storage."""
+        """Guarda proxies en almacenamiento."""
         data = {
             'proxies': [p.to_dict() for p in self.proxies],
             'last_updated': datetime.now().isoformat()
@@ -140,36 +140,36 @@ class ProxyManager:
             json.dump(data, f, indent=2, ensure_ascii=False)
     
     def add_proxy(self, proxy: ProxyEntry) -> None:
-        """Add a proxy to the pool.
+        """Agrega un proxy al pool.
         
         Args:
-            proxy: The proxy entry to add.
+            proxy: La entrada de proxy a agregar.
         """
         self.proxies.append(proxy)
         self._save_proxies()
         logger.info(f"Added proxy: {proxy.server}:{proxy.port}")
     
     def add_proxy_from_url(self, url: str) -> ProxyEntry:
-        """Add a proxy from URL string.
+        """Agrega un proxy desde string URL.
         
         Args:
-            url: Proxy URL in format protocol://[user:pass@]host:port
+            url: URL del proxy en formato protocol://[user:pass@]host:port
             
         Returns:
-            The created proxy entry.
+            La entrada de proxy creada.
         """
         proxy = ProxyEntry.from_url(url)
         self.add_proxy(proxy)
         return proxy
     
     def remove_proxy(self, index: int) -> bool:
-        """Remove a proxy by index.
+        """Elimina un proxy por índice.
         
         Args:
-            index: Index of the proxy to remove.
+            index: Índice del proxy a eliminar.
             
         Returns:
-            True if removed, False if index out of range.
+            True si se eliminó, False si el índice está fuera de rango.
         """
         if 0 <= index < len(self.proxies):
             removed = self.proxies.pop(index)
@@ -179,13 +179,13 @@ class ProxyManager:
         return False
     
     def get_next_proxy(self, strategy: str = "round_robin") -> Optional[ProxyEntry]:
-        """Get the next proxy based on rotation strategy.
+        """Obtiene el siguiente proxy basado en estrategia de rotación.
         
         Args:
-            strategy: Rotation strategy - "round_robin", "random", "best"
+            strategy: Estrategia de rotación - "round_robin", "random", "best"
             
         Returns:
-            The next proxy or None if pool is empty.
+            El siguiente proxy o None si el pool está vacío.
         """
         active_proxies = [p for p in self.proxies if p.is_active]
         
@@ -207,10 +207,10 @@ class ProxyManager:
         return proxy
     
     def report_success(self, proxy: ProxyEntry) -> None:
-        """Report successful use of a proxy.
+        """Reporta uso exitoso de un proxy.
         
         Args:
-            proxy: The proxy that was used successfully.
+            proxy: El proxy que se usó exitosamente.
         """
         for p in self.proxies:
             if p.server == proxy.server and p.port == proxy.port:
@@ -219,11 +219,11 @@ class ProxyManager:
         self._save_proxies()
     
     def report_failure(self, proxy: ProxyEntry, deactivate_threshold: int = 5) -> None:
-        """Report failed use of a proxy.
+        """Reporta uso fallido de un proxy.
         
         Args:
-            proxy: The proxy that failed.
-            deactivate_threshold: Number of consecutive failures before deactivation.
+            proxy: El proxy que falló.
+            deactivate_threshold: Número de fallos consecutivos antes de desactivación.
         """
         for p in self.proxies:
             if p.server == proxy.server and p.port == proxy.port:
@@ -238,13 +238,13 @@ class ProxyManager:
         self._save_proxies()
     
     def import_from_file(self, file_path: Path) -> int:
-        """Import proxies from a text file (one URL per line).
+        """Importa proxies desde un archivo de texto (una URL por línea).
         
         Args:
-            file_path: Path to the file containing proxy URLs.
+            file_path: Ruta al archivo que contiene URLs de proxies.
             
         Returns:
-            Number of proxies imported.
+            Número de proxies importados.
         """
         count = 0
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -259,13 +259,13 @@ class ProxyManager:
         return count
     
     def export_to_file(self, file_path: Path) -> int:
-        """Export proxies to a text file.
+        """Exporta proxies a un archivo de texto.
         
         Args:
-            file_path: Path to the output file.
+            file_path: Ruta al archivo de salida.
             
         Returns:
-            Number of proxies exported.
+            Número de proxies exportados.
         """
         with open(file_path, 'w', encoding='utf-8') as f:
             for proxy in self.proxies:
@@ -273,23 +273,23 @@ class ProxyManager:
         return len(self.proxies)
     
     def get_all_proxies(self) -> List[ProxyEntry]:
-        """Get all proxies in the pool.
+        """Obtiene todos los proxies en el pool.
         
         Returns:
-            List of all proxy entries.
+            Lista de todas las entradas de proxy.
         """
         return self.proxies.copy()
     
     def get_active_count(self) -> int:
-        """Get count of active proxies.
+        """Obtiene el conteo de proxies activos.
         
         Returns:
-            Number of active proxies.
+            Número de proxies activos.
         """
         return sum(1 for p in self.proxies if p.is_active)
     
     def clear_all(self) -> None:
-        """Remove all proxies from the pool."""
+        """Elimina todos los proxies del pool."""
         self.proxies.clear()
         self._save_proxies()
         logger.info("Cleared all proxies from pool")

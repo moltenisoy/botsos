@@ -2,7 +2,7 @@
 Módulo de Sesión del Navegador.
 
 Maneja la automatización del navegador usando Playwright con medidas anti-detección.
-Diseñado para Windows.
+Diseñado exclusivamente para Windows.
 """
 
 import asyncio
@@ -31,7 +31,11 @@ class BrowserAction:
 
 
 class BrowserSession:
-    """Manages a single browser automation session with anti-detection."""
+    """Administra una sesión de automatización de navegador con anti-detección.
+    
+    Proporciona métodos para navegar, hacer clic, escribir texto y otras
+    interacciones con páginas web de forma automatizada.
+    """
     
     def __init__(
         self,
@@ -39,12 +43,12 @@ class BrowserSession:
         fingerprint_manager: FingerprintManager,
         proxy_manager: Optional[ProxyManager] = None
     ):
-        """Initialize the browser session.
+        """Inicializa la sesión del navegador.
         
         Args:
-            session_config: Session configuration.
-            fingerprint_manager: Manager for device fingerprints.
-            proxy_manager: Optional proxy pool manager.
+            session_config: Configuración de la sesión.
+            fingerprint_manager: Administrador de huellas digitales.
+            proxy_manager: Administrador de pool de proxies (opcional).
         """
         self.config = session_config
         self.fingerprint_manager = fingerprint_manager
@@ -60,10 +64,10 @@ class BrowserSession:
         self._action_count = 0
     
     async def start(self) -> bool:
-        """Start the browser session.
+        """Inicia la sesión del navegador.
         
         Returns:
-            True if started successfully, False otherwise.
+            True si se inició exitosamente, False de lo contrario.
         """
         try:
             from playwright.async_api import async_playwright
@@ -148,7 +152,7 @@ class BrowserSession:
             return False
     
     async def stop(self) -> None:
-        """Stop the browser session."""
+        """Detiene la sesión del navegador."""
         self._is_running = False
         
         try:
@@ -166,7 +170,7 @@ class BrowserSession:
         logger.info(f"Browser session stopped: {self.config.session_id}")
     
     async def _apply_stealth_measures(self) -> None:
-        """Apply additional stealth measures to the page."""
+        """Aplica medidas adicionales de sigilo a la página."""
         if not self.page:
             return
         
@@ -198,14 +202,14 @@ class BrowserSession:
         """)
     
     async def navigate(self, url: str, wait_until: str = "load") -> bool:
-        """Navigate to a URL.
+        """Navega a una URL.
         
         Args:
-            url: URL to navigate to.
-            wait_until: When to consider navigation complete.
+            url: URL a la que navegar.
+            wait_until: Cuándo considerar la navegación completa.
             
         Returns:
-            True if navigation successful, False otherwise.
+            True si la navegación fue exitosa, False de lo contrario.
         """
         if not self.page or not self._is_running:
             return False
@@ -221,14 +225,14 @@ class BrowserSession:
             return False
     
     async def click(self, selector: str, timeout: int = 30000) -> bool:
-        """Click an element.
+        """Hace clic en un elemento.
         
         Args:
-            selector: CSS selector of the element.
-            timeout: Maximum wait time in milliseconds.
+            selector: Selector CSS del elemento.
+            timeout: Tiempo máximo de espera en milisegundos.
             
         Returns:
-            True if click successful, False otherwise.
+            True si el clic fue exitoso, False de lo contrario.
         """
         if not self.page or not self._is_running:
             return False
@@ -248,15 +252,15 @@ class BrowserSession:
             return False
     
     async def type_text(self, selector: str, text: str, timeout: int = 30000) -> bool:
-        """Type text into an element with human-like delays.
+        """Escribe texto en un elemento con retrasos similares a un humano.
         
         Args:
-            selector: CSS selector of the element.
-            text: Text to type.
-            timeout: Maximum wait time in milliseconds.
+            selector: Selector CSS del elemento.
+            text: Texto a escribir.
+            timeout: Tiempo máximo de espera en milisegundos.
             
         Returns:
-            True if typing successful, False otherwise.
+            True si la escritura fue exitosa, False de lo contrario.
         """
         if not self.page or not self._is_running:
             return False
@@ -291,13 +295,13 @@ class BrowserSession:
             return False
     
     async def scroll(self, delta_y: int = 300) -> bool:
-        """Scroll the page.
+        """Desplaza la página.
         
         Args:
-            delta_y: Amount to scroll (positive = down, negative = up).
+            delta_y: Cantidad a desplazar (positivo = abajo, negativo = arriba).
             
         Returns:
-            True if scroll successful, False otherwise.
+            True si el desplazamiento fue exitoso, False de lo contrario.
         """
         if not self.page or not self._is_running:
             return False
@@ -312,35 +316,35 @@ class BrowserSession:
             return False
     
     async def wait(self, seconds: float) -> None:
-        """Wait for a specified duration.
+        """Espera durante un tiempo especificado.
         
         Args:
-            seconds: Duration to wait in seconds.
+            seconds: Duración de espera en segundos.
         """
         if self._is_running:
             await asyncio.sleep(seconds)
     
     async def wait_random(self, min_sec: float, max_sec: float) -> None:
-        """Wait for a random duration.
+        """Espera durante un tiempo aleatorio.
         
         Args:
-            min_sec: Minimum wait time in seconds.
-            max_sec: Maximum wait time in seconds.
+            min_sec: Tiempo mínimo de espera en segundos.
+            max_sec: Tiempo máximo de espera en segundos.
         """
         await self.wait(random.uniform(min_sec, max_sec))
     
     async def _random_delay(self) -> None:
-        """Apply random delay between actions."""
+        """Aplica retraso aleatorio entre acciones."""
         min_ms = self.config.behavior.action_delay_min_ms
         max_ms = self.config.behavior.action_delay_max_ms
         delay = random.randint(min_ms, max_ms) / 1000
         await asyncio.sleep(delay)
     
     async def _human_mouse_move(self, selector: str) -> None:
-        """Move mouse to element in a human-like way.
+        """Mueve el ratón hacia un elemento de forma similar a un humano.
         
         Args:
-            selector: CSS selector of the target element.
+            selector: Selector CSS del elemento objetivo.
         """
         if not self.page:
             return
@@ -372,33 +376,33 @@ class BrowserSession:
             pass  # Mouse movement is optional
     
     async def get_page_content(self) -> str:
-        """Get the current page content.
+        """Obtiene el contenido de la página actual.
         
         Returns:
-            HTML content of the page.
+            Contenido HTML de la página.
         """
         if self.page:
             return await self.page.content()
         return ""
     
     async def get_page_title(self) -> str:
-        """Get the current page title.
+        """Obtiene el título de la página actual.
         
         Returns:
-            Title of the page.
+            Título de la página.
         """
         if self.page:
             return await self.page.title()
         return ""
     
     async def take_screenshot(self, path: str) -> bool:
-        """Take a screenshot of the current page.
+        """Toma una captura de pantalla de la página actual.
         
         Args:
-            path: Path to save the screenshot.
+            path: Ruta para guardar la captura de pantalla.
             
         Returns:
-            True if screenshot saved, False otherwise.
+            True si se guardó la captura, False de lo contrario.
         """
         if self.page:
             try:
@@ -409,14 +413,14 @@ class BrowserSession:
         return False
     
     async def element_exists(self, selector: str, timeout: int = 5000) -> bool:
-        """Check if an element exists on the page.
+        """Verifica si un elemento existe en la página.
         
         Args:
-            selector: CSS selector of the element.
-            timeout: Maximum wait time in milliseconds.
+            selector: Selector CSS del elemento.
+            timeout: Tiempo máximo de espera en milisegundos.
             
         Returns:
-            True if element exists, False otherwise.
+            True si el elemento existe, False de lo contrario.
         """
         if not self.page:
             return False
@@ -428,13 +432,13 @@ class BrowserSession:
             return False
     
     async def execute_actions(self, actions: List[BrowserAction]) -> bool:
-        """Execute a list of browser actions.
+        """Ejecuta una lista de acciones del navegador.
         
         Args:
-            actions: List of actions to execute.
+            actions: Lista de acciones a ejecutar.
             
         Returns:
-            True if all actions succeeded, False otherwise.
+            True si todas las acciones fueron exitosas, False de lo contrario.
         """
         for action in actions:
             if not self._is_running:
@@ -459,17 +463,17 @@ class BrowserSession:
     
     @property
     def is_running(self) -> bool:
-        """Check if the session is currently running."""
+        """Verifica si la sesión está actualmente en ejecución."""
         return self._is_running
     
     @property
     def action_count(self) -> int:
-        """Get the number of actions performed."""
+        """Obtiene el número de acciones realizadas."""
         return self._action_count
 
 
 class YouTubeAutomation:
-    """YouTube-specific automation routines."""
+    """Rutinas de automatización específicas de YouTube."""
     
     # YouTube selectors (may need updates as YouTube changes)
     SELECTORS = {
@@ -489,21 +493,21 @@ class YouTubeAutomation:
     }
     
     def __init__(self, browser_session: BrowserSession):
-        """Initialize YouTube automation.
+        """Inicializa la automatización de YouTube.
         
         Args:
-            browser_session: The browser session to use.
+            browser_session: La sesión del navegador a usar.
         """
         self.session = browser_session
     
     async def search_and_play(self, query: str) -> bool:
-        """Search for a video and play the first result.
+        """Busca un video y reproduce el primer resultado.
         
         Args:
-            query: Search query.
+            query: Consulta de búsqueda.
             
         Returns:
-            True if successful, False otherwise.
+            True si fue exitoso, False de lo contrario.
         """
         # Navigate to YouTube
         if not await self.session.navigate("https://www.youtube.com"):
@@ -531,10 +535,10 @@ class YouTubeAutomation:
         return True
     
     async def skip_ad_if_present(self) -> bool:
-        """Skip ad if present and skippable.
+        """Salta el anuncio si está presente y es saltable.
         
         Returns:
-            True if ad was skipped or no ad present, False on error.
+            True si se saltó el anuncio o no había anuncio, False en caso de error.
         """
         try:
             # Wait for skip button
@@ -549,21 +553,21 @@ class YouTubeAutomation:
             return True  # Continue anyway
     
     async def like_video(self) -> bool:
-        """Like the current video.
+        """Da like al video actual.
         
         Returns:
-            True if successful, False otherwise.
+            True si fue exitoso, False de lo contrario.
         """
         return await self.session.click(self.SELECTORS["like_button"])
     
     async def post_comment(self, comment: str) -> bool:
-        """Post a comment on the current video.
+        """Publica un comentario en el video actual.
         
         Args:
-            comment: Comment text to post.
+            comment: Texto del comentario a publicar.
             
         Returns:
-            True if successful, False otherwise.
+            True si fue exitoso, False de lo contrario.
         """
         # Scroll to comments section
         await self.session.scroll(500)
@@ -585,13 +589,13 @@ class YouTubeAutomation:
         return await self.session.click(self.SELECTORS["comment_submit"])
     
     async def watch_video(self, duration_sec: int) -> bool:
-        """Watch the current video for a specified duration.
+        """Mira el video actual durante un tiempo especificado.
         
         Args:
-            duration_sec: Duration to watch in seconds.
+            duration_sec: Duración de visualización en segundos.
             
         Returns:
-            True if watched successfully, False otherwise.
+            True si se miró exitosamente, False de lo contrario.
         """
         start_time = time.time()
         
@@ -611,9 +615,9 @@ class YouTubeAutomation:
         return True
     
     async def subscribe_to_channel(self) -> bool:
-        """Subscribe to the current channel.
+        """Suscribirse al canal actual.
         
         Returns:
-            True if successful, False otherwise.
+            True si fue exitoso, False de lo contrario.
         """
         return await self.session.click(self.SELECTORS["subscribe_button"])
