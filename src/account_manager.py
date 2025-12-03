@@ -265,7 +265,6 @@ class AccountManager:
             with open(accounts_file, 'rb') as f:
                 encrypted_data = f.read()
             
-            # Nota: Fernet se importa pero no se usa directamente aquí
             decrypted_data = self.encryption._fernet.decrypt(encrypted_data)
             
             import json
