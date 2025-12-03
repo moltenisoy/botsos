@@ -42,6 +42,25 @@ from .session_config import SessionConfig, SessionConfigManager
 from .proxy_manager import ProxyManager, ProxyEntry
 from .fingerprint_manager import FingerprintManager
 
+# FASE 5 - Imports con lazy loading para evitar errores si las dependencias no están instaladas
+try:
+    from .analytics_manager import AnalyticsManager
+    ANALYTICS_AVAILABLE = True
+except ImportError:
+    ANALYTICS_AVAILABLE = False
+
+try:
+    from .account_manager import AccountManager
+    ACCOUNT_MANAGER_AVAILABLE = True
+except ImportError:
+    ACCOUNT_MANAGER_AVAILABLE = False
+
+try:
+    from .ml_proxy_selector import MLProxySelector
+    ML_PROXY_AVAILABLE = True
+except ImportError:
+    ML_PROXY_AVAILABLE = False
+
 
 logger = logging.getLogger(__name__)
 
@@ -1915,9 +1934,15 @@ class SessionManagerGUI(QMainWindow):
     
     def _train_ml_proxy_model(self):
         """Entrenar el modelo ML de selección de proxy."""
+        if not ML_PROXY_AVAILABLE:
+            QMessageBox.warning(
+                self, "Error",
+                "El módulo ML de proxy no está disponible.\n"
+                "Verifique que scikit-learn esté instalado."
+            )
+            return
+        
         try:
-            from .ml_proxy_selector import MLProxySelector
-            
             selector = MLProxySelector(data_dir=self.data_dir / "ml_proxy")
             if selector.train_model():
                 QMessageBox.information(
@@ -1930,11 +1955,6 @@ class SessionManagerGUI(QMainWindow):
                     "No hay suficientes datos para entrenar el modelo.\n"
                     "Se requieren al menos 100 muestras."
                 )
-        except ImportError as e:
-            QMessageBox.warning(
-                self, "Error",
-                f"No se pudo cargar el módulo ML: {e}"
-            )
         except Exception as e:
             QMessageBox.critical(
                 self, "Error",
@@ -1943,9 +1963,15 @@ class SessionManagerGUI(QMainWindow):
     
     def _start_prometheus_server(self):
         """Iniciar el servidor de métricas Prometheus."""
+        if not ANALYTICS_AVAILABLE:
+            QMessageBox.warning(
+                self, "Error",
+                "El módulo de analíticas no está disponible.\n"
+                "Verifique que prometheus_client esté instalado."
+            )
+            return
+        
         try:
-            from .analytics_manager import AnalyticsManager
-            
             if not hasattr(self, '_analytics_manager'):
                 self._analytics_manager = AnalyticsManager(
                     data_dir=self.data_dir / "analytics",
@@ -1971,9 +1997,14 @@ class SessionManagerGUI(QMainWindow):
     
     def _export_analytics(self):
         """Exportar analíticas a CSV."""
+        if not ANALYTICS_AVAILABLE:
+            QMessageBox.warning(
+                self, "Error",
+                "El módulo de analíticas no está disponible."
+            )
+            return
+        
         try:
-            from .analytics_manager import AnalyticsManager
-            
             if not hasattr(self, '_analytics_manager'):
                 self._analytics_manager = AnalyticsManager(
                     data_dir=self.data_dir / "analytics"
@@ -1998,9 +2029,11 @@ class SessionManagerGUI(QMainWindow):
     
     def _refresh_metrics_summary(self):
         """Actualizar resumen de métricas."""
+        if not ANALYTICS_AVAILABLE:
+            self.metrics_summary_text.setText("Módulo de analíticas no disponible.")
+            return
+        
         try:
-            from .analytics_manager import AnalyticsManager
-            
             if not hasattr(self, '_analytics_manager'):
                 self._analytics_manager = AnalyticsManager(
                     data_dir=self.data_dir / "analytics"
@@ -2036,9 +2069,14 @@ Proxies:
     
     def _import_accounts(self):
         """Importar cuentas desde CSV."""
+        if not ACCOUNT_MANAGER_AVAILABLE:
+            QMessageBox.warning(
+                self, "Error",
+                "El módulo de gestión de cuentas no está disponible."
+            )
+            return
+        
         try:
-            from .account_manager import AccountManager
-            
             if not hasattr(self, '_account_manager'):
                 self._account_manager = AccountManager(
                     data_dir=self.data_dir / "accounts"
@@ -2070,9 +2108,14 @@ Proxies:
     
     def _export_accounts(self):
         """Exportar cuentas a CSV."""
+        if not ACCOUNT_MANAGER_AVAILABLE:
+            QMessageBox.warning(
+                self, "Error",
+                "El módulo de gestión de cuentas no está disponible."
+            )
+            return
+        
         try:
-            from .account_manager import AccountManager
-            
             if not hasattr(self, '_account_manager'):
                 self._account_manager = AccountManager(
                     data_dir=self.data_dir / "accounts"
@@ -2103,6 +2146,13 @@ Proxies:
     
     def _add_account(self):
         """Agregar una nueva cuenta."""
+        if not ACCOUNT_MANAGER_AVAILABLE:
+            QMessageBox.warning(
+                self, "Error",
+                "El módulo de gestión de cuentas no está disponible."
+            )
+            return
+        
         # Diálogo simple para agregar cuenta
         from PyQt6.QtWidgets import QDialog, QDialogButtonBox
         
@@ -2130,8 +2180,6 @@ Proxies:
         
         if dialog.exec() == QDialog.DialogCode.Accepted:
             try:
-                from .account_manager import AccountManager
-                
                 if not hasattr(self, '_account_manager'):
                     self._account_manager = AccountManager(
                         data_dir=self.data_dir / "accounts"
@@ -2165,8 +2213,6 @@ Proxies:
         
         if reply == QMessageBox.StandardButton.Yes:
             try:
-                from .account_manager import AccountManager
-                
                 if hasattr(self, '_account_manager'):
                     self._account_manager.remove_account(account_id)
                     self._refresh_accounts_list()
@@ -2178,9 +2224,10 @@ Proxies:
         """Actualizar lista de cuentas."""
         self.accounts_list.clear()
         
+        if not ACCOUNT_MANAGER_AVAILABLE:
+            return
+        
         try:
-            from .account_manager import AccountManager
-            
             if not hasattr(self, '_account_manager'):
                 self._account_manager = AccountManager(
                     data_dir=self.data_dir / "accounts"
