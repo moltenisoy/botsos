@@ -65,132 +65,139 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class WorkerSignals(QObject):
-    """Señales para comunicación de trabajadores QRunnable (de fase2.txt)."""
-    status_update = pyqtSignal(str, str)  # session_id, estado
-    log_message = pyqtSignal(str, str)    # session_id, mensaje
-    finished = pyqtSignal(str)             # session_id
-    resource_update = pyqtSignal(float, float)  # CPU%, RAM%
-    error = pyqtSignal(str, str)          # session_id, mensaje_error
-
-
-class SessionRunnable(QRunnable):
-    """Trabajador QRunnable para ejecutar sesiones de navegador con QThreadPool (de fase2.txt)."""
+# Importar clases de workers desde el módulo refactorizado
+# Esto elimina la duplicación de lógica entre SessionWorker y SessionRunnable
+try:
+    from .gui.workers import SessionWorker, SessionRunnable, WorkerSignals
+except ImportError:
+    # Fallback para compatibilidad si el módulo gui no existe todavía
+    class WorkerSignals(QObject):
+        """Señales para comunicación de trabajadores QRunnable (de fase2.txt)."""
+        status_update = pyqtSignal(str, str)  # session_id, estado
+        log_message = pyqtSignal(str, str)    # session_id, mensaje
+        finished = pyqtSignal(str)             # session_id
+        resource_update = pyqtSignal(float, float)  # CPU%, RAM%
+        error = pyqtSignal(str, str)          # session_id, mensaje_error
     
-    def __init__(self, session_config: SessionConfig):
-        super().__init__()
-        self.session_config = session_config
-        self.signals = WorkerSignals()
-        self._is_running = True
-        self.setAutoDelete(True)
-    
-    def run(self):
-        """Ejecutar la automatización de sesión usando asyncio."""
-        session_id = self.session_config.session_id
-        self.signals.status_update.emit(session_id, "ejecutando")
-        self.signals.log_message.emit(session_id, f"Iniciando sesión: {self.session_config.name}")
+    # Clase base abstracta para eliminar duplicación
+    class BaseSessionExecutor:
+        """Clase base con lógica común para ejecutores de sesión."""
         
-        try:
-            # Ejecutar la sesión async en un nuevo bucle de eventos
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        def __init__(self, session_config: SessionConfig):
+            if session_config is None:
+                raise ValueError("session_config no puede ser None")
+            self.session_config = session_config
+            self._is_running = True
+        
+        def _initialize_advanced_features(self, session_id: str, log_callback):
+            """Inicializar características avanzadas."""
             try:
-                loop.run_until_complete(self._run_session())
-            finally:
-                loop.close()
+                from .advanced_features import RetryManager, BehaviorSimulator, BehaviorSimulationConfig
                 
-        except Exception as e:
-            self.signals.log_message.emit(session_id, f"Error: {str(e)}")
-            self.signals.status_update.emit(session_id, "error")
-            self.signals.error.emit(session_id, str(e))
-        finally:
-            self.signals.status_update.emit(session_id, "inactivo")
-            self.signals.finished.emit(session_id)
-    
-    async def _run_session(self):
-        """Ejecución de sesión async con lógica de reintentos."""
-        session_id = self.session_config.session_id
+                self._retry_manager = RetryManager(
+                    max_retries=self.session_config.max_retries,
+                    base_delay_sec=self.session_config.retry_delay_sec,
+                    exponential_backoff=self.session_config.exponential_backoff
+                )
+                
+                self._behavior_simulator = BehaviorSimulator(BehaviorSimulationConfig(
+                    min_action_delay_ms=self.session_config.behavior.action_delay_min_ms,
+                    max_action_delay_ms=self.session_config.behavior.action_delay_max_ms,
+                    idle_time_min_sec=self.session_config.behavior.idle_time_min_sec,
+                    idle_time_max_sec=self.session_config.behavior.idle_time_max_sec,
+                    mouse_jitter_enabled=self.session_config.behavior.mouse_jitter_enabled,
+                    mouse_jitter_px=self.session_config.behavior.mouse_jitter_px,
+                    scroll_simulation_enabled=self.session_config.behavior.scroll_simulation_enabled
+                ))
+                
+                log_callback(session_id, "Características avanzadas cargadas")
+                return True
+            except ImportError as e:
+                log_callback(session_id, f"Características avanzadas no disponibles: {e}")
+                return False
         
-        # Importar características avanzadas
-        try:
-            from .advanced_features import RetryManager, BehaviorSimulator, BehaviorSimulationConfig
-            
-            retry_manager = RetryManager(
-                max_retries=self.session_config.max_retries,
-                base_delay_sec=self.session_config.retry_delay_sec,
-                exponential_backoff=self.session_config.exponential_backoff
-            )
-            
-            behavior_sim = BehaviorSimulator(BehaviorSimulationConfig(
-                min_action_delay_ms=self.session_config.behavior.action_delay_min_ms,
-                max_action_delay_ms=self.session_config.behavior.action_delay_max_ms,
-                idle_time_min_sec=self.session_config.behavior.idle_time_min_sec,
-                idle_time_max_sec=self.session_config.behavior.idle_time_max_sec,
-                mouse_jitter_enabled=self.session_config.behavior.mouse_jitter_enabled,
-                mouse_jitter_px=self.session_config.behavior.mouse_jitter_px,
-                scroll_simulation_enabled=self.session_config.behavior.scroll_simulation_enabled
-            ))
-            
-            self.signals.log_message.emit(session_id, "Características avanzadas cargadas")
-        except ImportError as e:
-            self.signals.log_message.emit(session_id, f"Características avanzadas no disponibles: {e}")
+        async def _run_session_loop(self):
+            """Bucle principal de la sesión."""
+            while self._is_running:
+                await asyncio.sleep(1)
         
-        # Marcador de ejecución de sesión - integrar con browser_session.py
-        self.signals.log_message.emit(session_id, "Sesión iniciada - esperando integración de automatización del navegador")
-        
-        while self._is_running:
-            await asyncio.sleep(1)
-    
-    def stop(self):
-        """Detener la sesión."""
-        self._is_running = False
+        def stop(self):
+            """Detener la sesión."""
+            self._is_running = False
 
-
-class SessionWorker(QThread):
-    """Hilo de trabajo para ejecutar sesiones de automatización del navegador."""
-    
-    status_update = pyqtSignal(str, str)  # session_id, estado
-    log_message = pyqtSignal(str, str)    # session_id, mensaje
-    finished = pyqtSignal(str)             # session_id
-    
-    def __init__(self, session_config: SessionConfig):
-        super().__init__()
-        self.session_config = session_config
-        self._is_running = True
-    
-    def run(self):
-        """Ejecutar la automatización de sesión."""
-        session_id = self.session_config.session_id
-        self.status_update.emit(session_id, "ejecutando")
-        self.log_message.emit(session_id, f"Iniciando sesión: {self.session_config.name}")
+    class SessionRunnable(QRunnable, BaseSessionExecutor):
+        """Trabajador QRunnable para ejecutar sesiones de navegador con QThreadPool."""
         
-        try:
-            # Ejecutar usando asyncio para operaciones async del navegador
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        def __init__(self, session_config: SessionConfig):
+            QRunnable.__init__(self)
+            BaseSessionExecutor.__init__(self, session_config)
+            self.signals = WorkerSignals()
+            self.setAutoDelete(True)
+        
+        def run(self):
+            """Ejecutar la automatización de sesión usando asyncio."""
+            session_id = self.session_config.session_id
+            self.signals.status_update.emit(session_id, "ejecutando")
+            self.signals.log_message.emit(session_id, f"Iniciando sesión: {self.session_config.name}")
+            
             try:
-                loop.run_until_complete(self._run_async_session())
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    loop.run_until_complete(self._run_session())
+                finally:
+                    loop.close()
+            except Exception as e:
+                self.signals.log_message.emit(session_id, f"Error: {str(e)}")
+                self.signals.status_update.emit(session_id, "error")
+                self.signals.error.emit(session_id, str(e))
             finally:
-                loop.close()
-                
-        except Exception as e:
-            self.log_message.emit(session_id, f"Error: {str(e)}")
-            self.status_update.emit(session_id, "error")
-        finally:
-            self.status_update.emit(session_id, "inactivo")
-            self.finished.emit(session_id)
-    
-    async def _run_async_session(self):
-        """Sesión async con simulación de comportamiento y lógica de reintentos."""
-        session_id = self.session_config.session_id
+                self.signals.status_update.emit(session_id, "inactivo")
+                self.signals.finished.emit(session_id)
         
-        # Simular sesión ejecutándose con soporte async
-        while self._is_running:
-            await asyncio.sleep(1)
-    
-    def stop(self):
-        """Detener la sesión."""
-        self._is_running = False
+        async def _run_session(self):
+            """Ejecución de sesión async."""
+            session_id = self.session_config.session_id
+            self._initialize_advanced_features(session_id, self.signals.log_message.emit)
+            self.signals.log_message.emit(session_id, "Sesión iniciada - esperando integración")
+            await self._run_session_loop()
+
+    class SessionWorker(QThread, BaseSessionExecutor):
+        """Hilo de trabajo para ejecutar sesiones de automatización."""
+        
+        status_update = pyqtSignal(str, str)
+        log_message = pyqtSignal(str, str)
+        finished = pyqtSignal(str)
+        
+        def __init__(self, session_config: SessionConfig):
+            QThread.__init__(self)
+            BaseSessionExecutor.__init__(self, session_config)
+        
+        def run(self):
+            """Ejecutar la automatización de sesión."""
+            session_id = self.session_config.session_id
+            self.status_update.emit(session_id, "ejecutando")
+            self.log_message.emit(session_id, f"Iniciando sesión: {self.session_config.name}")
+            
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    loop.run_until_complete(self._run_async_session())
+                finally:
+                    loop.close()
+            except Exception as e:
+                self.log_message.emit(session_id, f"Error: {str(e)}")
+                self.status_update.emit(session_id, "error")
+            finally:
+                self.status_update.emit(session_id, "inactivo")
+                self.finished.emit(session_id)
+        
+        async def _run_async_session(self):
+            """Sesión async."""
+            session_id = self.session_config.session_id
+            self._initialize_advanced_features(session_id, self.log_message.emit)
+            await self._run_session_loop()
 
 
 class SessionManagerGUI(QMainWindow):
