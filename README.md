@@ -1,16 +1,21 @@
 # BotSOS - Administrador de Sesiones Multi-Modelo
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.11+-blue.svg" alt="Python 3.11+">
+  <img src="https://img.shields.io/badge/Versión-1.0.0-brightgreen.svg" alt="Versión 1.0.0">
+  <img src="https://img.shields.io/badge/Python-3.10+-blue.svg" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/PyQt6-6.6+-green.svg" alt="PyQt6">
   <img src="https://img.shields.io/badge/Playwright-1.40+-orange.svg" alt="Playwright">
-  <img src="https://img.shields.io/badge/Windows-11-0078D6.svg" alt="Windows 11">
+  <img src="https://img.shields.io/badge/Windows-10%2F11-0078D6.svg" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Licencia-MIT-yellow.svg" alt="Licencia">
 </p>
 
-Un administrador de sesiones profesional para ejecutar múltiples instancias de automatización de navegador con LLM, con características avanzadas de anti-detección.
+Un administrador de sesiones profesional para ejecutar múltiples instancias de automatización de navegador con LLM, con características avanzadas de anti-detección, escalabilidad y sistema de plugins.
 
 **⚠️ Este proyecto está diseñado exclusivamente para Windows.**
+
+## ⚠️ ADVERTENCIA ÉTICA
+
+Esta herramienta está diseñada **únicamente para fines educativos, investigación de seguridad y pruebas autorizadas**. El uso para manipular métricas, cometer fraude, o violar los Términos de Servicio de cualquier plataforma es **ilegal y está estrictamente prohibido**. El usuario asume toda la responsabilidad por el uso de esta herramienta.
 
 ## 🚀 Características
 
@@ -65,9 +70,11 @@ Un administrador de sesiones profesional para ejecutar múltiples instancias de 
 ## 📋 Requisitos
 
 - Windows 10 o Windows 11
-- Python 3.11 o superior
-- 16GB de RAM recomendados (mínimo 8GB)
+- Python 3.10 o superior
+- 8GB de RAM mínimo (16GB recomendados para múltiples sesiones)
 - Ollama (para integración con LLM)
+- Docker Desktop (opcional, para escalabilidad)
+- AWS CLI (opcional, para escalabilidad cloud)
 
 ## 🛠️ Instalación
 
@@ -89,6 +96,11 @@ install_deps.bat
 ollama pull llama3.1:8b
 ```
 
+4. Verifica la instalación:
+```cmd
+python main.py --check-system
+```
+
 ## 🎮 Uso
 
 ### Iniciando la Aplicación
@@ -99,6 +111,18 @@ venv\Scripts\activate
 
 REM Ejecutar la aplicación
 python main.py
+
+REM Ver opciones disponibles
+python main.py --help
+```
+
+### Opciones de Línea de Comandos
+
+```
+python main.py                 # Iniciar la aplicación
+python main.py --version       # Mostrar versión
+python main.py --check-system  # Verificar requisitos del sistema
+python main.py --debug         # Modo debug con logging detallado
 ```
 
 ### Creando una Sesión
@@ -139,13 +163,15 @@ Edita el archivo `config/rutinas.json` para definir rutinas de automatización:
 
 ```
 botsos/
-├── main.py                 # Punto de entrada de la aplicación
-├── requirements.txt        # Dependencias de Python
-├── install_deps.bat        # Script de instalación para Windows
+├── main.py                     # Punto de entrada de la aplicación
+├── VERSION                     # Versión actual (1.0.0)
+├── requirements.txt            # Dependencias de Python
+├── pytest.ini                  # Configuración de pytest
+├── install_deps.bat            # Script de instalación para Windows
 ├── config/
-│   ├── devices.json        # Presets de huella digital de dispositivos
-│   ├── default_config.json # Configuración por defecto de sesiones
-│   └── rutinas.json        # Rutinas de automatización predefinidas
+│   ├── devices.json            # Presets de huella digital de dispositivos
+│   ├── default_config.json     # Configuración por defecto de sesiones
+│   └── rutinas.json            # Rutinas de automatización predefinidas
 ├── src/
 │   ├── __init__.py
 │   ├── session_manager_gui.py  # Aplicación GUI principal
@@ -153,10 +179,50 @@ botsos/
 │   ├── proxy_manager.py        # Gestión de pool de proxies
 │   ├── fingerprint_manager.py  # Manejo de huellas digitales
 │   ├── browser_session.py      # Lógica de automatización del navegador
-│   └── advanced_features.py    # Características avanzadas de Fase 2/3
-├── data/                   # Almacenamiento de datos persistentes
-├── logs/                   # Registros de la aplicación
-└── browser_context/        # Datos de sesión del navegador
+│   ├── advanced_features.py    # Características anti-detección avanzadas
+│   ├── account_manager.py      # Gestión de cuentas con encriptación
+│   ├── scaling_manager.py      # Escalabilidad Docker/AWS
+│   ├── analytics_manager.py    # Métricas y analíticas Prometheus
+│   ├── scheduler_manager.py    # Programación de tareas (APScheduler)
+│   ├── ml_proxy_selector.py    # Selección de proxy con ML
+│   ├── windows_manager.py      # Gestión específica de Windows (UAC, Docker)
+│   ├── plugin_system.py        # Sistema de plugins de evasión
+│   ├── help_system.py          # Tooltips, tutorial y documentación
+│   └── packaging_manager.py    # Empaquetado con PyInstaller
+├── plugins/                    # Plugins de evasión (YAML/JSON)
+├── tests/                      # Suite de pruebas pytest
+│   └── test_core.py
+├── data/                       # Almacenamiento de datos persistentes
+├── logs/                       # Registros de la aplicación
+└── browser_context/            # Datos de sesión del navegador
+```
+
+## 🧪 Pruebas
+
+Ejecutar la suite de pruebas:
+
+```cmd
+pytest tests/ -v
+```
+
+Ejecutar pruebas con cobertura:
+
+```cmd
+pytest tests/ -v --cov=src --cov-report=html
+```
+
+## 📦 Empaquetado
+
+Para crear un ejecutable standalone:
+
+```cmd
+python -c "from src.packaging_manager import PackagingManager; pm = PackagingManager(); print(pm.build())"
+```
+
+O usando PyInstaller directamente:
+
+```cmd
+pyinstaller BotSOS.spec --noconfirm
 ```
 
 ## ⚙️ Configuración
