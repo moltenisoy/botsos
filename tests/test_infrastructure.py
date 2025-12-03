@@ -280,7 +280,6 @@ class TestConnectionPool:
         """Test: Pool como context manager."""
         # Mock aiohttp para evitar dependencia real
         with patch.dict('sys.modules', {'aiohttp': MagicMock()}):
-            import sys
             mock_aiohttp = sys.modules['aiohttp']
             mock_session = AsyncMock()
             mock_session.close = AsyncMock()
@@ -299,7 +298,6 @@ class TestConnectionPool:
     async def test_pool_get_session_creates_once(self):
         """Test: get_session solo crea la sesión una vez."""
         with patch.dict('sys.modules', {'aiohttp': MagicMock()}):
-            import sys
             mock_aiohttp = sys.modules['aiohttp']
             mock_session = AsyncMock()
             mock_session.close = AsyncMock()
@@ -322,7 +320,6 @@ class TestConnectionPool:
     async def test_pool_closed_raises_error(self):
         """Test: Usar pool cerrado lanza error."""
         with patch.dict('sys.modules', {'aiohttp': MagicMock()}):
-            import sys
             mock_aiohttp = sys.modules['aiohttp']
             mock_session = AsyncMock()
             mock_session.close = AsyncMock()

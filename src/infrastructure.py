@@ -603,9 +603,15 @@ class Dependencies:
             Instancia de Dependencies configurada.
         """
         # Importaciones diferidas para evitar dependencias circulares
-        from .fingerprint_manager import FingerprintManager
-        from .proxy_manager import ProxyManager
-        from .analytics_manager import AnalyticsManager
+        # Usar try/except para soportar tanto imports relativos como absolutos
+        try:
+            from .fingerprint_manager import FingerprintManager
+            from .proxy_manager import ProxyManager
+            from .analytics_manager import AnalyticsManager
+        except ImportError:
+            from fingerprint_manager import FingerprintManager
+            from proxy_manager import ProxyManager
+            from analytics_manager import AnalyticsManager
         
         return cls(
             fingerprint_manager=FingerprintManager(data_dir / "config"),
@@ -626,9 +632,15 @@ class Dependencies:
         Returns:
             Instancia de Dependencies para testing.
         """
-        from .fingerprint_manager import FingerprintManager
-        from .proxy_manager import ProxyManager
-        from .analytics_manager import AnalyticsManager
+        # Usar try/except para soportar tanto imports relativos como absolutos
+        try:
+            from .fingerprint_manager import FingerprintManager
+            from .proxy_manager import ProxyManager
+            from .analytics_manager import AnalyticsManager
+        except ImportError:
+            from fingerprint_manager import FingerprintManager
+            from proxy_manager import ProxyManager
+            from analytics_manager import AnalyticsManager
         
         return cls(
             fingerprint_manager=FingerprintManager(data_dir / "config"),
