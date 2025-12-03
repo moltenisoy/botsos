@@ -644,15 +644,25 @@ class RLFeedbackLoop:
     Ajusta parámetros de plugins basándose en resultados.
     """
     
-    def __init__(self, plugin_manager: PluginManager, learning_rate: float = 0.1):
+    # Umbral mínimo de muestras para ajuste
+    MIN_SAMPLES_FOR_ADJUSTMENT = 10
+    
+    def __init__(
+        self,
+        plugin_manager: PluginManager,
+        learning_rate: float = 0.1,
+        min_samples: int = 10
+    ):
         """Inicializa el bucle de retroalimentación.
         
         Args:
             plugin_manager: Administrador de plugins.
             learning_rate: Tasa de aprendizaje.
+            min_samples: Muestras mínimas antes de ajustar.
         """
         self.plugin_manager = plugin_manager
         self.learning_rate = learning_rate
+        self.min_samples = min_samples
         self._history: List[Dict[str, Any]] = []
     
     def record_outcome(self, plugin_id: str, success: bool, context: Dict[str, Any]):
@@ -677,13 +687,14 @@ class RLFeedbackLoop:
             self.plugin_manager.report_failure(plugin_id)
         
         # Ajustar configuración si hay suficiente historial
-        if len(self._history) >= 10:
+        if len(self._history) >= self.min_samples:
             self._adjust_plugins()
     
     def _adjust_plugins(self):
         """Ajusta parámetros de plugins basándose en historial."""
-        # Analizar últimos 10 resultados
-        recent = self._history[-10:]
+        # Analizar últimas N muestras (configurable)
+        sample_size = min(self.min_samples, len(self._history))
+        recent = self._history[-sample_size:]
         
         # Agrupar por plugin
         plugin_results: Dict[str, List[bool]] = {}

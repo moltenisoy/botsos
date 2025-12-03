@@ -418,15 +418,21 @@ class HardwareDetector:
                 "para iGPUs. Se recomienda usar CPU para procesamiento."
             )
         
-        # Verificar si DirectML está disponible como alternativa
+        # Verificar DirectML a través de DirectX
         try:
+            # Intentar importar directml para verificar disponibilidad
             result = subprocess.run(
-                ["dxdiag", "/t", os.devnull],
+                ["dxdiag", "/t", "directx_info.txt"],
                 capture_output=True,
-                timeout=5
+                timeout=5,
+                cwd=os.environ.get("TEMP", ".")
             )
+            # Limpiar archivo temporal si se creó
+            temp_file = Path(os.environ.get("TEMP", ".")) / "directx_info.txt"
+            if temp_file.exists():
+                temp_file.unlink()
             return True, "DirectML disponible para aceleración GPU AMD"
-        except Exception:
+        except (subprocess.TimeoutExpired, FileNotFoundError, PermissionError):
             return False, "Aceleración GPU no disponible"
 
 

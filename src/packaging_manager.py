@@ -181,7 +181,10 @@ class PackagingManager:
             for path in src_pattern.parent.glob(src_pattern.name):
                 if path.is_file():
                     dest = str(path.parent.relative_to(self.project_root))
-                    datas.append(f"('{path}', '{dest}')")
+                    # Escapar rutas para evitar problemas con caracteres especiales
+                    escaped_path = str(path).replace("'", "\\'").replace("\\", "\\\\")
+                    escaped_dest = dest.replace("'", "\\'").replace("\\", "\\\\")
+                    datas.append(f"(r'{escaped_path}', r'{escaped_dest}')")
         
         datas_str = ",\n             ".join(datas) if datas else ""
         
@@ -193,7 +196,11 @@ class PackagingManager:
         
         # Icono
         icon_path = self.project_root / config.icon_path
-        icon_str = f"'{icon_path}'" if icon_path.exists() else "None"
+        if icon_path.exists():
+            escaped_icon = str(icon_path).replace("'", "\\'").replace("\\", "\\\\")
+            icon_str = f"r'{escaped_icon}'"
+        else:
+            icon_str = "None"
         
         spec_content = f'''# -*- mode: python ; coding: utf-8 -*-
 # Archivo generado automáticamente por BotSOS PackagingManager

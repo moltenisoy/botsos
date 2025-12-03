@@ -594,8 +594,8 @@ class EthicalConsentManager:
                 with open(self._consent_file, 'r') as f:
                     data = json.load(f)
                     return data.get("consent_given", False)
-            except Exception:
-                pass
+            except (FileNotFoundError, PermissionError, json.JSONDecodeError) as e:
+                logger.warning(f"Error cargando consentimiento: {e}")
         return False
     
     def _save_consent(self, consent: bool):

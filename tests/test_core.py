@@ -19,10 +19,6 @@ from unittest.mock import Mock, MagicMock, patch, AsyncMock
 from typing import Generator, Dict, Any
 import tempfile
 import os
-import sys
-
-# Agregar src al path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
 # ============================================================
