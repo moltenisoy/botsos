@@ -106,6 +106,84 @@ class CaptchaConfig:
     captcha_types: List[str] = field(default_factory=lambda: ["recaptcha_v2", "recaptcha_v3", "hcaptcha"])
     timeout_sec: int = 120
     max_retries: int = 3
+    
+    # Hybrid CAPTCHA solver settings (from fase3.txt)
+    hybrid_mode: bool = True  # AI first, human fallback
+    secondary_provider: str = "capsolver"  # Fallback provider
+
+
+@dataclass
+class ContingencyConfig:
+    """Configuration for contingency planning (from fase3.txt)."""
+    # Eviction thresholds
+    block_rate_threshold: float = 0.10  # 5-10% - evict proxy if block rate exceeds this
+    consecutive_failure_threshold: int = 3  # 3-5 consecutive failures before eviction
+    
+    # Cool-down settings
+    cool_down_min_sec: int = 300  # 5 minutes minimum cool-down
+    cool_down_max_sec: int = 1200  # 20 minutes maximum cool-down
+    
+    # Ban recovery
+    ban_recovery_strategy: str = "mobile_fallback"  # mobile_fallback, throttle, rotate_all
+    enable_dynamic_throttling: bool = True
+    
+    # Session management
+    sticky_session_duration_sec: int = 600  # 10 minutes sticky sessions
+    enable_session_persistence: bool = True
+
+
+@dataclass
+class AdvancedBehaviorConfig:
+    """Configuration for advanced behavioral simulation (from fase3.txt)."""
+    # Polymorphic fingerprinting
+    polymorphic_fingerprint_enabled: bool = True
+    fingerprint_rotation_interval_sec: int = 3600  # Rotate every hour
+    
+    # OS-level input emulation
+    os_level_input_enabled: bool = False  # Use nodriver-style emulation
+    
+    # Touch emulation for mobile
+    touch_emulation_enabled: bool = False
+    touch_pressure_variation: float = 0.2  # 20% pressure variation
+    
+    # Micro-jitters for touch patterns
+    micro_jitter_enabled: bool = True
+    micro_jitter_amplitude: int = 2  # Pixels
+    
+    # Typing pressure patterns
+    typing_pressure_enabled: bool = False
+    typing_rhythm_variation: float = 0.15  # 15% variation
+
+
+@dataclass
+class SystemHidingConfig:
+    """Configuration for system/port hiding (from fase3.txt)."""
+    # CDP port blocking
+    block_cdp_ports: bool = True
+    cdp_port_default: int = 9222
+    
+    # Loopback interface management
+    disable_loopback_services: bool = False
+    
+    # Ephemeral port randomization
+    randomize_ephemeral_ports: bool = True
+    ephemeral_port_min: int = 49152
+    ephemeral_port_max: int = 65535
+    
+    # Firewall rules (commands)
+    custom_firewall_rules: List[str] = field(default_factory=list)
+    
+    # WebRTC leak prevention
+    block_webrtc_completely: bool = False  # More aggressive than just spoofing
+
+
+@dataclass
+class MfaConfig:
+    """Configuration for MFA contingency handling (from fase3.txt)."""
+    mfa_simulation_enabled: bool = False
+    mfa_method: str = "none"  # none, email, sms (for future integration)
+    mfa_timeout_sec: int = 120
+    show_ethical_warning: bool = True
 
 
 @dataclass
@@ -123,6 +201,12 @@ class SessionConfig:
     proxy: ProxyConfig = field(default_factory=ProxyConfig)
     fingerprint: FingerprintConfig = field(default_factory=FingerprintConfig)
     captcha: CaptchaConfig = field(default_factory=CaptchaConfig)
+    
+    # Phase 3 configurations
+    contingency: ContingencyConfig = field(default_factory=ContingencyConfig)
+    advanced_behavior: AdvancedBehaviorConfig = field(default_factory=AdvancedBehaviorConfig)
+    system_hiding: SystemHidingConfig = field(default_factory=SystemHidingConfig)
+    mfa: MfaConfig = field(default_factory=MfaConfig)
     
     # Retry settings (from fase2.txt - second block)
     max_retries: int = 3
@@ -146,18 +230,30 @@ class SessionConfig:
         proxy_data = data.pop('proxy', {})
         fingerprint_data = data.pop('fingerprint', {})
         captcha_data = data.pop('captcha', {})
+        contingency_data = data.pop('contingency', {})
+        advanced_behavior_data = data.pop('advanced_behavior', {})
+        system_hiding_data = data.pop('system_hiding', {})
+        mfa_data = data.pop('mfa', {})
         
         # Filter out unknown fields from nested configs to handle version changes
         behavior_fields = set(BehaviorConfig.__dataclass_fields__.keys())
         proxy_fields = set(ProxyConfig.__dataclass_fields__.keys())
         fingerprint_fields = set(FingerprintConfig.__dataclass_fields__.keys())
         captcha_fields = set(CaptchaConfig.__dataclass_fields__.keys())
+        contingency_fields = set(ContingencyConfig.__dataclass_fields__.keys())
+        advanced_behavior_fields = set(AdvancedBehaviorConfig.__dataclass_fields__.keys())
+        system_hiding_fields = set(SystemHidingConfig.__dataclass_fields__.keys())
+        mfa_fields = set(MfaConfig.__dataclass_fields__.keys())
         
         return cls(
             behavior=BehaviorConfig(**{k: v for k, v in behavior_data.items() if k in behavior_fields}),
             proxy=ProxyConfig(**{k: v for k, v in proxy_data.items() if k in proxy_fields}),
             fingerprint=FingerprintConfig(**{k: v for k, v in fingerprint_data.items() if k in fingerprint_fields}),
             captcha=CaptchaConfig(**{k: v for k, v in captcha_data.items() if k in captcha_fields}),
+            contingency=ContingencyConfig(**{k: v for k, v in contingency_data.items() if k in contingency_fields}),
+            advanced_behavior=AdvancedBehaviorConfig(**{k: v for k, v in advanced_behavior_data.items() if k in advanced_behavior_fields}),
+            system_hiding=SystemHidingConfig(**{k: v for k, v in system_hiding_data.items() if k in system_hiding_fields}),
+            mfa=MfaConfig(**{k: v for k, v in mfa_data.items() if k in mfa_fields}),
             **{k: v for k, v in data.items() if k not in ('status',) and k in cls.__dataclass_fields__}
         )
     
