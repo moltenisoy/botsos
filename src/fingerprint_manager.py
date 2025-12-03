@@ -1,7 +1,8 @@
 """
-Fingerprint Manager Module
+Módulo Administrador de Huellas Digitales
 
-Handles device fingerprint generation, randomization, and application.
+Maneja la generación, aleatorización y aplicación de huellas digitales de dispositivo.
+Diseñado para Windows.
 """
 
 import json

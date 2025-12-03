@@ -1,25 +1,25 @@
 """
-Session Manager GUI Module
+Módulo de Interfaz Gráfica del Administrador de Sesiones
 
-Professional PyQt6-based graphical user interface for managing
-multiple LLM-powered browser automation sessions.
+Interfaz gráfica profesional basada en PyQt6 para gestionar
+múltiples sesiones de automatización de navegador con LLM.
 
-Implements features from fase2.txt:
-- Multi-session management with QThreadPool
-- Advanced fingerprint spoofing configuration
-- Behavior simulation settings
-- CAPTCHA handling configuration
-- Proxy validation and rotation
-- Real-time logging and monitoring
+Diseñado exclusivamente para Windows.
+
+Implementa características de fase2.txt:
+- Gestión de múltiples sesiones con QThreadPool
+- Configuración avanzada de suplantación de huella digital
+- Ajustes de simulación de comportamiento
+- Configuración de manejo de CAPTCHA
+- Validación y rotación de proxies
+- Registro y monitoreo en tiempo real
 """
 
 import sys
-import json
 import logging
-import time
 import asyncio
 from pathlib import Path
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 from logging.handlers import RotatingFileHandler
 
 try:
@@ -36,12 +36,9 @@ from PyQt6.QtWidgets import (
     QFileDialog, QProgressBar, QSlider
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QThreadPool, QRunnable, QObject
-from PyQt6.QtGui import QFont, QIcon, QColor
+from PyQt6.QtGui import QFont
 
-from .session_config import (
-    SessionConfig, SessionConfigManager, BehaviorConfig, CaptchaConfig,
-    ContingencyConfig, AdvancedBehaviorConfig, SystemHidingConfig, MfaConfig
-)
+from .session_config import SessionConfig, SessionConfigManager
 from .proxy_manager import ProxyManager, ProxyEntry
 from .fingerprint_manager import FingerprintManager
 
@@ -50,16 +47,16 @@ logger = logging.getLogger(__name__)
 
 
 class WorkerSignals(QObject):
-    """Signals for QRunnable worker communication (from fase2.txt)."""
-    status_update = pyqtSignal(str, str)  # session_id, status
-    log_message = pyqtSignal(str, str)    # session_id, message
+    """Señales para comunicación de trabajadores QRunnable (de fase2.txt)."""
+    status_update = pyqtSignal(str, str)  # session_id, estado
+    log_message = pyqtSignal(str, str)    # session_id, mensaje
     finished = pyqtSignal(str)             # session_id
     resource_update = pyqtSignal(float, float)  # CPU%, RAM%
-    error = pyqtSignal(str, str)          # session_id, error_message
+    error = pyqtSignal(str, str)          # session_id, mensaje_error
 
 
 class SessionRunnable(QRunnable):
-    """QRunnable worker for running browser sessions with QThreadPool (from fase2.txt)."""
+    """Trabajador QRunnable para ejecutar sesiones de navegador con QThreadPool (de fase2.txt)."""
     
     def __init__(self, session_config: SessionConfig):
         super().__init__()
@@ -69,13 +66,13 @@ class SessionRunnable(QRunnable):
         self.setAutoDelete(True)
     
     def run(self):
-        """Execute the session automation using asyncio."""
+        """Ejecutar la automatización de sesión usando asyncio."""
         session_id = self.session_config.session_id
-        self.signals.status_update.emit(session_id, "running")
-        self.signals.log_message.emit(session_id, f"Starting session: {self.session_config.name}")
+        self.signals.status_update.emit(session_id, "ejecutando")
+        self.signals.log_message.emit(session_id, f"Iniciando sesión: {self.session_config.name}")
         
         try:
-            # Run the async session in a new event loop
+            # Ejecutar la sesión async en un nuevo bucle de eventos
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
@@ -88,14 +85,14 @@ class SessionRunnable(QRunnable):
             self.signals.status_update.emit(session_id, "error")
             self.signals.error.emit(session_id, str(e))
         finally:
-            self.signals.status_update.emit(session_id, "idle")
+            self.signals.status_update.emit(session_id, "inactivo")
             self.signals.finished.emit(session_id)
     
     async def _run_session(self):
-        """Async session execution with retry logic."""
+        """Ejecución de sesión async con lógica de reintentos."""
         session_id = self.session_config.session_id
         
-        # Import advanced features
+        # Importar características avanzadas
         try:
             from .advanced_features import RetryManager, BehaviorSimulator, BehaviorSimulationConfig
             
@@ -115,26 +112,26 @@ class SessionRunnable(QRunnable):
                 scroll_simulation_enabled=self.session_config.behavior.scroll_simulation_enabled
             ))
             
-            self.signals.log_message.emit(session_id, "Advanced features loaded")
+            self.signals.log_message.emit(session_id, "Características avanzadas cargadas")
         except ImportError as e:
-            self.signals.log_message.emit(session_id, f"Advanced features unavailable: {e}")
+            self.signals.log_message.emit(session_id, f"Características avanzadas no disponibles: {e}")
         
-        # Session execution placeholder - integrate with browser_session.py
-        self.signals.log_message.emit(session_id, "Session started - waiting for browser automation integration")
+        # Marcador de ejecución de sesión - integrar con browser_session.py
+        self.signals.log_message.emit(session_id, "Sesión iniciada - esperando integración de automatización del navegador")
         
         while self._is_running:
             await asyncio.sleep(1)
     
     def stop(self):
-        """Stop the session."""
+        """Detener la sesión."""
         self._is_running = False
 
 
 class SessionWorker(QThread):
-    """Worker thread for running browser automation sessions."""
+    """Hilo de trabajo para ejecutar sesiones de automatización del navegador."""
     
-    status_update = pyqtSignal(str, str)  # session_id, status
-    log_message = pyqtSignal(str, str)    # session_id, message
+    status_update = pyqtSignal(str, str)  # session_id, estado
+    log_message = pyqtSignal(str, str)    # session_id, mensaje
     finished = pyqtSignal(str)             # session_id
     
     def __init__(self, session_config: SessionConfig):
@@ -143,13 +140,13 @@ class SessionWorker(QThread):
         self._is_running = True
     
     def run(self):
-        """Execute the session automation."""
+        """Ejecutar la automatización de sesión."""
         session_id = self.session_config.session_id
-        self.status_update.emit(session_id, "running")
-        self.log_message.emit(session_id, f"Starting session: {self.session_config.name}")
+        self.status_update.emit(session_id, "ejecutando")
+        self.log_message.emit(session_id, f"Iniciando sesión: {self.session_config.name}")
         
         try:
-            # Run using asyncio for async browser operations
+            # Ejecutar usando asyncio para operaciones async del navegador
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
@@ -161,95 +158,95 @@ class SessionWorker(QThread):
             self.log_message.emit(session_id, f"Error: {str(e)}")
             self.status_update.emit(session_id, "error")
         finally:
-            self.status_update.emit(session_id, "idle")
+            self.status_update.emit(session_id, "inactivo")
             self.finished.emit(session_id)
     
     async def _run_async_session(self):
-        """Async session with behavior simulation and retry logic."""
+        """Sesión async con simulación de comportamiento y lógica de reintentos."""
         session_id = self.session_config.session_id
         
-        # Simulate session running with async support
+        # Simular sesión ejecutándose con soporte async
         while self._is_running:
             await asyncio.sleep(1)
     
     def stop(self):
-        """Stop the session."""
+        """Detener la sesión."""
         self._is_running = False
 
 
 class SessionManagerGUI(QMainWindow):
-    """Main GUI window for the Multi-Model Session Manager."""
+    """Ventana principal de la GUI para el Administrador de Sesiones Multi-Modelo."""
     
     def __init__(self):
         super().__init__()
         
-        # Initialize paths
+        # Inicializar rutas
         self.base_dir = Path(__file__).parent.parent
         self.config_dir = self.base_dir / "config"
         self.data_dir = self.base_dir / "data"
         self.logs_dir = self.base_dir / "logs"
         
-        # Initialize managers
+        # Inicializar administradores
         self.config_manager = SessionConfigManager(self.data_dir)
         self.proxy_manager = ProxyManager(self.data_dir)
         self.fingerprint_manager = FingerprintManager(self.config_dir)
         
-        # Initialize QThreadPool for parallel session execution (from fase2.txt)
+        # Inicializar QThreadPool para ejecución paralela de sesiones (de fase2.txt)
         self.threadpool = QThreadPool()
-        # Use ideal thread count based on system, capped at 8 for resource management
+        # Usar conteo ideal de hilos basado en el sistema, limitado a 8 para gestión de recursos
         ideal_threads = min(QThread.idealThreadCount(), 8)
         self.threadpool.setMaxThreadCount(max(2, ideal_threads))
         
-        # Session workers (both QThread and QRunnable tracking)
+        # Trabajadores de sesión (seguimiento de QThread y QRunnable)
         self.workers: Dict[str, SessionWorker] = {}
         self.runnables: Dict[str, SessionRunnable] = {}
         
-        # Current session being edited
+        # Sesión actual siendo editada
         self.current_session: Optional[SessionConfig] = None
         
-        # Setup UI
+        # Configurar UI
         self._setup_window()
         self._setup_ui()
         self._setup_status_bar()
         self._load_sessions_list()
         
-        # Resource monitoring timer
+        # Temporizador de monitoreo de recursos
         self.resource_timer = QTimer()
         self.resource_timer.timeout.connect(self._update_resource_usage)
-        self.resource_timer.start(5000)  # Every 5 seconds
+        self.resource_timer.start(5000)  # Cada 5 segundos
         
-        # Anomaly detection timer (from fase3.txt)
+        # Temporizador de detección de anomalías (de fase3.txt)
         self.anomaly_timer = QTimer()
         self.anomaly_timer.timeout.connect(self._check_anomalies)
-        self.anomaly_timer.start(5000)  # Every 5 seconds
+        self.anomaly_timer.start(5000)  # Cada 5 segundos
         
-        # Initialize contingency and anomaly managers (from fase3.txt)
+        # Inicializar administradores de contingencia y anomalías (de fase3.txt)
         self._init_phase3_managers()
         
-        # Setup advanced logging (from fase2.txt)
+        # Configurar registro avanzado (de fase2.txt)
         self._setup_advanced_logging()
     
     def _init_phase3_managers(self):
-        """Initialize Phase 3 managers for contingency and anomaly detection."""
+        """Inicializar administradores de Fase 3 para contingencia y detección de anomalías."""
         try:
             from .advanced_features import ContingencyManager, AnomalyDetector, SystemHidingManager
             self.contingency_manager = ContingencyManager()
             self.anomaly_detector = AnomalyDetector()
             self.system_hiding_manager = SystemHidingManager()
         except ImportError as e:
-            logger.warning(f"Phase 3 managers not available: {e}")
+            logger.warning(f"Administradores de Fase 3 no disponibles: {e}")
             self.contingency_manager = None
             self.anomaly_detector = None
             self.system_hiding_manager = None
     
     def _check_anomalies(self):
-        """Check for anomalies in active sessions (from fase3.txt)."""
+        """Verificar anomalías en sesiones activas (de fase3.txt)."""
         if not self.anomaly_detector:
             return
         
         for session_id, worker in self.workers.items():
             try:
-                # Record CPU/RAM as metrics for anomaly detection
+                # Registrar CPU/RAM como métricas para detección de anomalías
                 if PSUTIL_AVAILABLE:
                     cpu = psutil.cpu_percent()
                     ram = psutil.virtual_memory().percent
@@ -257,26 +254,26 @@ class SessionManagerGUI(QMainWindow):
                     self.anomaly_detector.record_metric(session_id, 'cpu_usage', cpu)
                     self.anomaly_detector.record_metric(session_id, 'ram_usage', ram)
                     
-                    # Check for CPU/RAM anomalies
+                    # Verificar anomalías de CPU/RAM
                     if self.anomaly_detector.check_anomaly(session_id, 'cpu_usage', cpu):
-                        self._on_log_message(session_id, f"⚠️ CPU anomaly detected: {cpu:.1f}%")
+                        self._on_log_message(session_id, f"⚠️ Anomalía de CPU detectada: {cpu:.1f}%")
                     
                     if self.anomaly_detector.check_anomaly(session_id, 'ram_usage', ram):
-                        self._on_log_message(session_id, f"⚠️ RAM anomaly detected: {ram:.1f}%")
+                        self._on_log_message(session_id, f"⚠️ Anomalía de RAM detectada: {ram:.1f}%")
                     
-                    # Alert if resources are critically high
+                    # Alertar si los recursos están críticamente altos
                     if cpu > 80:
-                        self._on_log_message(session_id, f"🔴 High CPU usage: {cpu:.1f}%")
+                        self._on_log_message(session_id, f"🔴 Uso alto de CPU: {cpu:.1f}%")
                     if ram > 80:
-                        self._on_log_message(session_id, f"🔴 High RAM usage: {ram:.1f}%")
+                        self._on_log_message(session_id, f"🔴 Uso alto de RAM: {ram:.1f}%")
             except Exception as e:
-                logger.error(f"Error checking anomalies for {session_id}: {e}")
+                logger.error(f"Error verificando anomalías para {session_id}: {e}")
     
     def _setup_advanced_logging(self):
-        """Setup advanced logging with RotatingFileHandler (from fase2.txt)."""
+        """Configurar registro avanzado con RotatingFileHandler (de fase2.txt)."""
         self.logs_dir.mkdir(parents=True, exist_ok=True)
         
-        # Main application logger
+        # Logger principal de la aplicación
         app_log_file = self.logs_dir / "botsos_app.log"
         file_handler = RotatingFileHandler(
             app_log_file,
@@ -295,8 +292,8 @@ class SessionManagerGUI(QMainWindow):
         root_logger.addHandler(file_handler)
     
     def _setup_window(self):
-        """Configure the main window."""
-        self.setWindowTitle("BotSOS - Multi-Model Session Manager")
+        """Configurar la ventana principal."""
+        self.setWindowTitle("BotSOS - Administrador de Sesiones Multi-Modelo")
         self.setGeometry(100, 100, 1400, 900)
         self.setMinimumSize(1000, 700)
         
@@ -418,7 +415,7 @@ class SessionManagerGUI(QMainWindow):
         """)
     
     def _setup_ui(self):
-        """Setup the main user interface."""
+        """Configurar la interfaz de usuario principal."""
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         
@@ -426,77 +423,77 @@ class SessionManagerGUI(QMainWindow):
         main_layout.setSpacing(10)
         main_layout.setContentsMargins(10, 10, 10, 10)
         
-        # Create splitter for resizable panels
+        # Crear divisor para paneles redimensionables
         splitter = QSplitter(Qt.Orientation.Horizontal)
         
-        # Left sidebar - Session List
+        # Barra lateral izquierda - Lista de Sesiones
         sidebar = self._create_sidebar()
         splitter.addWidget(sidebar)
         
-        # Right panel - Configuration Tabs
+        # Panel derecho - Pestañas de Configuración
         config_panel = self._create_config_panel()
         splitter.addWidget(config_panel)
         
-        # Set initial sizes (30% sidebar, 70% config)
+        # Establecer tamaños iniciales (30% barra lateral, 70% configuración)
         splitter.setSizes([350, 850])
         
         main_layout.addWidget(splitter)
     
     def _create_sidebar(self) -> QWidget:
-        """Create the left sidebar with session list."""
+        """Crear la barra lateral izquierda con lista de sesiones."""
         sidebar = QWidget()
         layout = QVBoxLayout(sidebar)
         layout.setSpacing(10)
         
-        # Header
-        header = QLabel("Sessions")
+        # Encabezado
+        header = QLabel("Sesiones")
         header.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
         layout.addWidget(header)
         
-        # Session list
+        # Lista de sesiones
         self.session_list = QListWidget()
         self.session_list.itemClicked.connect(self._on_session_selected)
         layout.addWidget(self.session_list, stretch=1)
         
-        # Session control buttons
+        # Botones de control de sesión
         btn_layout = QVBoxLayout()
         
-        add_btn = QPushButton("➕ Add Session")
+        add_btn = QPushButton("➕ Agregar Sesión")
         add_btn.clicked.connect(self._add_session)
         btn_layout.addWidget(add_btn)
         
-        remove_btn = QPushButton("🗑️ Remove Session")
+        remove_btn = QPushButton("🗑️ Eliminar Sesión")
         remove_btn.setObjectName("dangerBtn")
         remove_btn.clicked.connect(self._remove_session)
         btn_layout.addWidget(remove_btn)
         
         btn_layout.addSpacing(10)
         
-        start_btn = QPushButton("▶️ Start Selected")
+        start_btn = QPushButton("▶️ Iniciar Seleccionada")
         start_btn.setObjectName("successBtn")
         start_btn.clicked.connect(self._start_selected_session)
         btn_layout.addWidget(start_btn)
         
-        stop_btn = QPushButton("⏹️ Stop Selected")
+        stop_btn = QPushButton("⏹️ Detener Seleccionada")
         stop_btn.clicked.connect(self._stop_selected_session)
         btn_layout.addWidget(stop_btn)
         
         btn_layout.addSpacing(10)
         
-        start_all_btn = QPushButton("▶️▶️ Start All")
+        start_all_btn = QPushButton("▶️▶️ Iniciar Todas")
         start_all_btn.setObjectName("successBtn")
         start_all_btn.clicked.connect(self._start_all_sessions)
         btn_layout.addWidget(start_all_btn)
         
-        stop_all_btn = QPushButton("⏹️⏹️ Stop All")
+        stop_all_btn = QPushButton("⏹️⏹️ Detener Todas")
         stop_all_btn.setObjectName("dangerBtn")
         stop_all_btn.clicked.connect(self._stop_all_sessions)
         btn_layout.addWidget(stop_all_btn)
         
         layout.addLayout(btn_layout)
         
-        # Resource usage
-        resource_group = QGroupBox("System Resources")
+        # Uso de recursos
+        resource_group = QGroupBox("Recursos del Sistema")
         resource_layout = QVBoxLayout(resource_group)
         
         self.cpu_label = QLabel("CPU: 0%")
@@ -516,39 +513,39 @@ class SessionManagerGUI(QMainWindow):
         return sidebar
     
     def _create_config_panel(self) -> QWidget:
-        """Create the right configuration panel with tabs."""
+        """Crear el panel de configuración derecho con pestañas."""
         panel = QWidget()
         layout = QVBoxLayout(panel)
         layout.setSpacing(10)
         
-        # Session name header
+        # Encabezado del nombre de sesión
         name_layout = QHBoxLayout()
-        name_label = QLabel("Session:")
+        name_label = QLabel("Sesión:")
         name_label.setFont(QFont("Segoe UI", 12))
         self.session_name_edit = QLineEdit()
-        self.session_name_edit.setPlaceholderText("Select a session...")
+        self.session_name_edit.setPlaceholderText("Seleccione una sesión...")
         self.session_name_edit.textChanged.connect(self._on_session_name_changed)
         name_layout.addWidget(name_label)
         name_layout.addWidget(self.session_name_edit, stretch=1)
         layout.addLayout(name_layout)
         
-        # Configuration tabs
+        # Pestañas de configuración
         self.config_tabs = QTabWidget()
-        self.config_tabs.addTab(self._create_behavior_tab(), "🎮 Behaviors")
+        self.config_tabs.addTab(self._create_behavior_tab(), "🎮 Comportamientos")
         self.config_tabs.addTab(self._create_proxy_tab(), "🌐 Proxy/IP")
-        self.config_tabs.addTab(self._create_fingerprint_tab(), "🖥️ Fingerprint")
-        self.config_tabs.addTab(self._create_advanced_spoof_tab(), "🔒 Advanced Spoof")
-        self.config_tabs.addTab(self._create_behavior_simulation_tab(), "🤖 Behavior Sim")
+        self.config_tabs.addTab(self._create_fingerprint_tab(), "🖥️ Huella Digital")
+        self.config_tabs.addTab(self._create_advanced_spoof_tab(), "🔒 Suplantación Avanzada")
+        self.config_tabs.addTab(self._create_behavior_simulation_tab(), "🤖 Simulación de Comportamiento")
         self.config_tabs.addTab(self._create_captcha_tab(), "🔑 CAPTCHA")
-        # Phase 3 tabs
-        self.config_tabs.addTab(self._create_contingency_tab(), "🛡️ Contingency")
-        self.config_tabs.addTab(self._create_advanced_behavior_tab(), "⚡ Adv. Behavior")
-        self.config_tabs.addTab(self._create_system_hiding_tab(), "🔐 System Hiding")
-        self.config_tabs.addTab(self._create_logging_tab(), "📝 Logs")
+        # Pestañas de Fase 3
+        self.config_tabs.addTab(self._create_contingency_tab(), "🛡️ Contingencia")
+        self.config_tabs.addTab(self._create_advanced_behavior_tab(), "⚡ Comportamiento Avanzado")
+        self.config_tabs.addTab(self._create_system_hiding_tab(), "🔐 Ocultación del Sistema")
+        self.config_tabs.addTab(self._create_logging_tab(), "📝 Registros")
         layout.addWidget(self.config_tabs)
         
-        # Save button
-        save_btn = QPushButton("💾 Save Configuration")
+        # Botón de guardar
+        save_btn = QPushButton("💾 Guardar Configuración")
         save_btn.setObjectName("successBtn")
         save_btn.clicked.connect(self._save_current_session)
         layout.addWidget(save_btn)
@@ -556,12 +553,12 @@ class SessionManagerGUI(QMainWindow):
         return panel
     
     def _create_behavior_tab(self) -> QWidget:
-        """Create the behavior configuration tab."""
+        """Crear la pestaña de configuración de comportamiento."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # LLM Settings
-        llm_group = QGroupBox("LLM Model Settings")
+        # Configuración de LLM
+        llm_group = QGroupBox("Configuración del Modelo LLM")
         llm_layout = QFormLayout(llm_group)
         
         self.model_combo = QComboBox()
@@ -572,76 +569,76 @@ class SessionManagerGUI(QMainWindow):
             "phi3.5:3.8b",
             "gemma2:9b"
         ])
-        llm_layout.addRow("Model:", self.model_combo)
+        llm_layout.addRow("Modelo:", self.model_combo)
         
-        self.headless_check = QCheckBox("Run in headless mode")
+        self.headless_check = QCheckBox("Ejecutar en modo oculto")
         llm_layout.addRow(self.headless_check)
         
         layout.addWidget(llm_group)
         
-        # Timing Settings
-        timing_group = QGroupBox("Timing Settings")
+        # Configuración de Tiempos
+        timing_group = QGroupBox("Configuración de Tiempos")
         timing_layout = QFormLayout(timing_group)
         
         self.ad_skip_delay = QSpinBox()
         self.ad_skip_delay.setRange(1, 30)
         self.ad_skip_delay.setValue(5)
-        self.ad_skip_delay.setSuffix(" sec")
-        timing_layout.addRow("Ad Skip Delay:", self.ad_skip_delay)
+        self.ad_skip_delay.setSuffix(" seg")
+        timing_layout.addRow("Retraso para Saltar Anuncio:", self.ad_skip_delay)
         
         self.view_time_min = QSpinBox()
         self.view_time_min.setRange(10, 300)
         self.view_time_min.setValue(30)
-        self.view_time_min.setSuffix(" sec")
-        timing_layout.addRow("Min View Time:", self.view_time_min)
+        self.view_time_min.setSuffix(" seg")
+        timing_layout.addRow("Tiempo Mínimo de Vista:", self.view_time_min)
         
         self.view_time_max = QSpinBox()
         self.view_time_max.setRange(30, 600)
         self.view_time_max.setValue(120)
-        self.view_time_max.setSuffix(" sec")
-        timing_layout.addRow("Max View Time:", self.view_time_max)
+        self.view_time_max.setSuffix(" seg")
+        timing_layout.addRow("Tiempo Máximo de Vista:", self.view_time_max)
         
         self.action_delay_min = QSpinBox()
         self.action_delay_min.setRange(50, 1000)
         self.action_delay_min.setValue(100)
         self.action_delay_min.setSuffix(" ms")
-        timing_layout.addRow("Min Action Delay:", self.action_delay_min)
+        timing_layout.addRow("Retraso Mínimo de Acción:", self.action_delay_min)
         
         self.action_delay_max = QSpinBox()
         self.action_delay_max.setRange(100, 2000)
         self.action_delay_max.setValue(500)
         self.action_delay_max.setSuffix(" ms")
-        timing_layout.addRow("Max Action Delay:", self.action_delay_max)
+        timing_layout.addRow("Retraso Máximo de Acción:", self.action_delay_max)
         
         layout.addWidget(timing_group)
         
-        # Actions Settings
-        actions_group = QGroupBox("Enabled Actions")
+        # Configuración de Acciones
+        actions_group = QGroupBox("Acciones Habilitadas")
         actions_layout = QVBoxLayout(actions_group)
         
-        self.enable_like = QCheckBox("Enable Like")
+        self.enable_like = QCheckBox("Habilitar Me Gusta")
         self.enable_like.setChecked(True)
         actions_layout.addWidget(self.enable_like)
         
-        self.enable_comment = QCheckBox("Enable Comment")
+        self.enable_comment = QCheckBox("Habilitar Comentarios")
         self.enable_comment.setChecked(True)
         actions_layout.addWidget(self.enable_comment)
         
-        self.enable_subscribe = QCheckBox("Enable Subscribe")
+        self.enable_subscribe = QCheckBox("Habilitar Suscripción")
         actions_layout.addWidget(self.enable_subscribe)
         
-        self.enable_skip_ads = QCheckBox("Enable Skip Ads")
+        self.enable_skip_ads = QCheckBox("Habilitar Saltar Anuncios")
         self.enable_skip_ads.setChecked(True)
         actions_layout.addWidget(self.enable_skip_ads)
         
         layout.addWidget(actions_group)
         
-        # Task Prompt
-        prompt_group = QGroupBox("Task Prompt (YAML/JSON)")
+        # Prompt de Tarea
+        prompt_group = QGroupBox("Prompt de Tarea (YAML/JSON)")
         prompt_layout = QVBoxLayout(prompt_group)
         
         self.prompt_edit = QTextEdit()
-        self.prompt_edit.setPlaceholderText("Enter your task prompt here...")
+        self.prompt_edit.setPlaceholderText("Ingrese su prompt de tarea aquí...")
         self.prompt_edit.setMinimumHeight(150)
         prompt_layout.addWidget(self.prompt_edit)
         
@@ -651,43 +648,43 @@ class SessionManagerGUI(QMainWindow):
         return tab
     
     def _create_proxy_tab(self) -> QWidget:
-        """Create the proxy configuration tab."""
+        """Crear la pestaña de configuración de proxy."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # Single Proxy Settings
-        single_group = QGroupBox("Session Proxy")
+        # Configuración de Proxy Individual
+        single_group = QGroupBox("Proxy de Sesión")
         single_layout = QFormLayout(single_group)
         
-        self.proxy_enabled = QCheckBox("Enable Proxy")
+        self.proxy_enabled = QCheckBox("Habilitar Proxy")
         single_layout.addRow(self.proxy_enabled)
         
         self.proxy_type = QComboBox()
         self.proxy_type.addItems(["http", "https", "socks5"])
-        single_layout.addRow("Type:", self.proxy_type)
+        single_layout.addRow("Tipo:", self.proxy_type)
         
         self.proxy_server = QLineEdit()
-        self.proxy_server.setPlaceholderText("proxy.example.com")
-        single_layout.addRow("Server:", self.proxy_server)
+        self.proxy_server.setPlaceholderText("proxy.ejemplo.com")
+        single_layout.addRow("Servidor:", self.proxy_server)
         
         self.proxy_port = QSpinBox()
         self.proxy_port.setRange(1, 65535)
         self.proxy_port.setValue(8080)
-        single_layout.addRow("Port:", self.proxy_port)
+        single_layout.addRow("Puerto:", self.proxy_port)
         
         self.proxy_user = QLineEdit()
-        self.proxy_user.setPlaceholderText("username (optional)")
-        single_layout.addRow("Username:", self.proxy_user)
+        self.proxy_user.setPlaceholderText("usuario (opcional)")
+        single_layout.addRow("Usuario:", self.proxy_user)
         
         self.proxy_pass = QLineEdit()
-        self.proxy_pass.setPlaceholderText("password (optional)")
+        self.proxy_pass.setPlaceholderText("contraseña (opcional)")
         self.proxy_pass.setEchoMode(QLineEdit.EchoMode.Password)
-        single_layout.addRow("Password:", self.proxy_pass)
+        single_layout.addRow("Contraseña:", self.proxy_pass)
         
         layout.addWidget(single_group)
         
-        # Proxy Pool
-        pool_group = QGroupBox("Proxy Pool")
+        # Pool de Proxies
+        pool_group = QGroupBox("Pool de Proxies")
         pool_layout = QVBoxLayout(pool_group)
         
         self.proxy_pool_list = QListWidget()
@@ -696,19 +693,19 @@ class SessionManagerGUI(QMainWindow):
         
         pool_btn_layout = QHBoxLayout()
         
-        add_proxy_btn = QPushButton("Add")
+        add_proxy_btn = QPushButton("Agregar")
         add_proxy_btn.clicked.connect(self._add_proxy_to_pool)
         pool_btn_layout.addWidget(add_proxy_btn)
         
-        remove_proxy_btn = QPushButton("Remove")
+        remove_proxy_btn = QPushButton("Eliminar")
         remove_proxy_btn.clicked.connect(self._remove_proxy_from_pool)
         pool_btn_layout.addWidget(remove_proxy_btn)
         
-        import_proxy_btn = QPushButton("Import...")
+        import_proxy_btn = QPushButton("Importar...")
         import_proxy_btn.clicked.connect(self._import_proxies)
         pool_btn_layout.addWidget(import_proxy_btn)
         
-        validate_proxy_btn = QPushButton("Validate All")
+        validate_proxy_btn = QPushButton("Validar Todos")
         validate_proxy_btn.clicked.connect(self._validate_proxy_pool)
         pool_btn_layout.addWidget(validate_proxy_btn)
         
@@ -716,25 +713,25 @@ class SessionManagerGUI(QMainWindow):
         
         layout.addWidget(pool_group)
         
-        # Rotation Settings
-        rotation_group = QGroupBox("Rotation Settings")
+        # Configuración de Rotación
+        rotation_group = QGroupBox("Configuración de Rotación")
         rotation_layout = QFormLayout(rotation_group)
         
         self.rotation_interval = QSpinBox()
         self.rotation_interval.setRange(1, 100)
         self.rotation_interval.setValue(10)
-        self.rotation_interval.setSuffix(" requests")
-        rotation_layout.addRow("Rotate Every:", self.rotation_interval)
+        self.rotation_interval.setSuffix(" solicitudes")
+        rotation_layout.addRow("Rotar Cada:", self.rotation_interval)
         
         self.rotation_strategy = QComboBox()
-        self.rotation_strategy.addItems(["Round Robin", "Random", "Best Performance"])
-        rotation_layout.addRow("Strategy:", self.rotation_strategy)
+        self.rotation_strategy.addItems(["Round Robin", "Aleatorio", "Mejor Rendimiento"])
+        rotation_layout.addRow("Estrategia:", self.rotation_strategy)
         
-        self.validate_before_use = QCheckBox("Validate Proxy Before Use")
+        self.validate_before_use = QCheckBox("Validar Proxy Antes de Usar")
         self.validate_before_use.setChecked(True)
         rotation_layout.addRow(self.validate_before_use)
         
-        self.auto_deactivate_failed = QCheckBox("Auto-deactivate Failed Proxies")
+        self.auto_deactivate_failed = QCheckBox("Desactivar Automáticamente Proxies Fallidos")
         self.auto_deactivate_failed.setChecked(True)
         rotation_layout.addRow(self.auto_deactivate_failed)
         
@@ -742,18 +739,18 @@ class SessionManagerGUI(QMainWindow):
         
         layout.addStretch()
         
-        # Load proxy pool
+        # Cargar pool de proxies
         self._load_proxy_pool()
         
         return tab
     
     def _create_fingerprint_tab(self) -> QWidget:
-        """Create the fingerprint/device configuration tab."""
+        """Crear la pestaña de configuración de huella digital/dispositivo."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # Device Preset
-        preset_group = QGroupBox("Device Preset")
+        # Preset de Dispositivo
+        preset_group = QGroupBox("Preset de Dispositivo")
         preset_layout = QFormLayout(preset_group)
         
         self.device_preset = QComboBox()
@@ -765,18 +762,18 @@ class SessionManagerGUI(QMainWindow):
         self.device_preset.currentIndexChanged.connect(self._on_device_preset_changed)
         preset_layout.addRow("Preset:", self.device_preset)
         
-        self.randomize_on_start = QCheckBox("Randomize on session start")
+        self.randomize_on_start = QCheckBox("Aleatorizar al iniciar sesión")
         self.randomize_on_start.setChecked(True)
         preset_layout.addRow(self.randomize_on_start)
         
         layout.addWidget(preset_group)
         
-        # Custom Settings
-        custom_group = QGroupBox("Custom Settings")
+        # Configuración Personalizada
+        custom_group = QGroupBox("Configuración Personalizada")
         custom_layout = QFormLayout(custom_group)
         
         self.user_agent_edit = QLineEdit()
-        self.user_agent_edit.setPlaceholderText("Auto-generated from preset")
+        self.user_agent_edit.setPlaceholderText("Auto-generado desde preset")
         custom_layout.addRow("User-Agent:", self.user_agent_edit)
         
         viewport_layout = QHBoxLayout()
@@ -794,38 +791,40 @@ class SessionManagerGUI(QMainWindow):
         self.hardware_concurrency = QSpinBox()
         self.hardware_concurrency.setRange(1, 64)
         self.hardware_concurrency.setValue(8)
-        custom_layout.addRow("CPU Cores:", self.hardware_concurrency)
+        custom_layout.addRow("Núcleos de CPU:", self.hardware_concurrency)
         
         self.device_memory = QSpinBox()
         self.device_memory.setRange(1, 128)
         self.device_memory.setValue(8)
         self.device_memory.setSuffix(" GB")
-        custom_layout.addRow("Device Memory:", self.device_memory)
+        custom_layout.addRow("Memoria del Dispositivo:", self.device_memory)
         
         self.timezone_combo = QComboBox()
         self.timezone_combo.addItems([
+            "America/Mexico_City",
+            "America/Bogota",
+            "America/Lima",
+            "America/Santiago",
+            "America/Buenos_Aires",
             "America/New_York",
-            "America/Los_Angeles", 
-            "America/Chicago",
-            "Europe/London",
-            "Europe/Paris",
-            "Asia/Tokyo",
+            "America/Los_Angeles",
+            "Europe/Madrid",
             "UTC"
         ])
-        custom_layout.addRow("Timezone:", self.timezone_combo)
+        custom_layout.addRow("Zona Horaria:", self.timezone_combo)
         
         layout.addWidget(custom_group)
         
-        # Spoofing Options
-        spoof_group = QGroupBox("Spoofing Options")
+        # Opciones de Suplantación
+        spoof_group = QGroupBox("Opciones de Suplantación")
         spoof_layout = QVBoxLayout(spoof_group)
         
-        self.canvas_noise = QCheckBox("Canvas Noise Injection")
+        self.canvas_noise = QCheckBox("Inyección de Ruido en Canvas")
         self.canvas_noise.setChecked(True)
         spoof_layout.addWidget(self.canvas_noise)
         
         noise_layout = QHBoxLayout()
-        noise_layout.addWidget(QLabel("Noise Level:"))
+        noise_layout.addWidget(QLabel("Nivel de Ruido:"))
         self.canvas_noise_level = QSpinBox()
         self.canvas_noise_level.setRange(0, 10)
         self.canvas_noise_level.setValue(5)
@@ -833,19 +832,19 @@ class SessionManagerGUI(QMainWindow):
         noise_layout.addStretch()
         spoof_layout.addLayout(noise_layout)
         
-        self.webrtc_protection = QCheckBox("WebRTC Protection")
+        self.webrtc_protection = QCheckBox("Protección WebRTC")
         self.webrtc_protection.setChecked(True)
         spoof_layout.addWidget(self.webrtc_protection)
         
-        self.webgl_spoofing = QCheckBox("WebGL Spoofing")
+        self.webgl_spoofing = QCheckBox("Suplantación de WebGL")
         self.webgl_spoofing.setChecked(True)
         spoof_layout.addWidget(self.webgl_spoofing)
         
-        self.audio_spoofing = QCheckBox("Audio Context Spoofing")
+        self.audio_spoofing = QCheckBox("Suplantación de Contexto de Audio")
         self.audio_spoofing.setChecked(True)
         spoof_layout.addWidget(self.audio_spoofing)
         
-        self.font_spoofing = QCheckBox("Font Spoofing")
+        self.font_spoofing = QCheckBox("Suplantación de Fuentes")
         self.font_spoofing.setChecked(True)
         spoof_layout.addWidget(self.font_spoofing)
         
@@ -855,12 +854,12 @@ class SessionManagerGUI(QMainWindow):
         return tab
     
     def _create_advanced_spoof_tab(self) -> QWidget:
-        """Create the advanced spoofing configuration tab (from fase2.txt - second block)."""
+        """Crear la pestaña de configuración de suplantación avanzada (de fase2.txt - segundo bloque)."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # TLS/JA3 Settings
-        tls_group = QGroupBox("TLS/JA3 Fingerprint")
+        # Configuración TLS/JA3
+        tls_group = QGroupBox("Huella Digital TLS/JA3")
         tls_layout = QFormLayout(tls_group)
         
         self.tls_profile = QComboBox()
@@ -871,38 +870,38 @@ class SessionManagerGUI(QMainWindow):
             "safari_17",
             "edge_120"
         ])
-        tls_layout.addRow("TLS Profile:", self.tls_profile)
+        tls_layout.addRow("Perfil TLS:", self.tls_profile)
         
-        self.client_hints_enabled = QCheckBox("Enable Client Hints")
+        self.client_hints_enabled = QCheckBox("Habilitar Client Hints")
         self.client_hints_enabled.setChecked(True)
         tls_layout.addRow(self.client_hints_enabled)
         
         layout.addWidget(tls_group)
         
-        # WebGPU Settings
-        webgpu_group = QGroupBox("WebGPU Spoofing")
+        # Configuración WebGPU
+        webgpu_group = QGroupBox("Suplantación de WebGPU")
         webgpu_layout = QFormLayout(webgpu_group)
         
-        self.webgpu_enabled = QCheckBox("Enable WebGPU Spoofing")
+        self.webgpu_enabled = QCheckBox("Habilitar Suplantación de WebGPU")
         self.webgpu_enabled.setChecked(True)
         webgpu_layout.addRow(self.webgpu_enabled)
         
         self.webgpu_vendor = QLineEdit()
         self.webgpu_vendor.setText("Google Inc.")
-        webgpu_layout.addRow("GPU Vendor:", self.webgpu_vendor)
+        webgpu_layout.addRow("Fabricante de GPU:", self.webgpu_vendor)
         
         self.webgpu_architecture = QComboBox()
         self.webgpu_architecture.addItems(["x86_64", "arm64", "x86"])
-        webgpu_layout.addRow("Architecture:", self.webgpu_architecture)
+        webgpu_layout.addRow("Arquitectura:", self.webgpu_architecture)
         
         layout.addWidget(webgpu_group)
         
-        # Canvas/WebGL Advanced
-        canvas_group = QGroupBox("Canvas & WebGL Advanced")
+        # Canvas/WebGL Avanzado
+        canvas_group = QGroupBox("Canvas y WebGL Avanzado")
         canvas_layout = QFormLayout(canvas_group)
         
         noise_layout = QHBoxLayout()
-        noise_layout.addWidget(QLabel("Canvas Noise (0-10):"))
+        noise_layout.addWidget(QLabel("Ruido de Canvas (0-10):"))
         self.adv_canvas_noise = QSlider(Qt.Orientation.Horizontal)
         self.adv_canvas_noise.setRange(0, 10)
         self.adv_canvas_noise.setValue(5)
@@ -915,22 +914,22 @@ class SessionManagerGUI(QMainWindow):
         canvas_layout.addRow(noise_layout)
         
         self.webgl_vendor_override = QLineEdit()
-        self.webgl_vendor_override.setPlaceholderText("Leave empty for preset value")
-        canvas_layout.addRow("WebGL Vendor Override:", self.webgl_vendor_override)
+        self.webgl_vendor_override.setPlaceholderText("Dejar vacío para valor del preset")
+        canvas_layout.addRow("Sobrescribir Fabricante WebGL:", self.webgl_vendor_override)
         
         self.webgl_renderer_override = QLineEdit()
-        self.webgl_renderer_override.setPlaceholderText("Leave empty for preset value")
-        canvas_layout.addRow("WebGL Renderer Override:", self.webgl_renderer_override)
+        self.webgl_renderer_override.setPlaceholderText("Dejar vacío para valor del preset")
+        canvas_layout.addRow("Sobrescribir Renderizador WebGL:", self.webgl_renderer_override)
         
         layout.addWidget(canvas_group)
         
-        # Font Spoofing
-        font_group = QGroupBox("Font Spoofing")
+        # Suplantación de Fuentes
+        font_group = QGroupBox("Suplantación de Fuentes")
         font_layout = QVBoxLayout(font_group)
         
         self.custom_fonts_edit = QTextEdit()
         self.custom_fonts_edit.setMaximumHeight(100)
-        self.custom_fonts_edit.setPlaceholderText("One font per line:\nArial\nHelvetica\nTimes New Roman")
+        self.custom_fonts_edit.setPlaceholderText("Una fuente por línea:\nArial\nHelvetica\nTimes New Roman")
         self.custom_fonts_edit.setText("Arial\nHelvetica\nTimes New Roman\nGeorgia\nVerdana\nCourier New")
         font_layout.addWidget(self.custom_fonts_edit)
         
@@ -940,15 +939,15 @@ class SessionManagerGUI(QMainWindow):
         return tab
     
     def _create_behavior_simulation_tab(self) -> QWidget:
-        """Create the behavior simulation configuration tab (from fase2.txt - second block)."""
+        """Crear la pestaña de configuración de simulación de comportamiento (de fase2.txt - segundo bloque)."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # Mouse Simulation
-        mouse_group = QGroupBox("Mouse Simulation")
+        # Simulación del Ratón
+        mouse_group = QGroupBox("Simulación del Ratón")
         mouse_layout = QFormLayout(mouse_group)
         
-        self.mouse_jitter_enabled = QCheckBox("Enable Mouse Jitter")
+        self.mouse_jitter_enabled = QCheckBox("Habilitar Movimiento Aleatorio del Ratón")
         self.mouse_jitter_enabled.setChecked(True)
         mouse_layout.addRow(self.mouse_jitter_enabled)
         
@@ -956,47 +955,47 @@ class SessionManagerGUI(QMainWindow):
         self.mouse_jitter_px.setRange(1, 20)
         self.mouse_jitter_px.setValue(5)
         self.mouse_jitter_px.setSuffix(" px")
-        mouse_layout.addRow("Jitter Amount:", self.mouse_jitter_px)
+        mouse_layout.addRow("Cantidad de Movimiento:", self.mouse_jitter_px)
         
-        self.enable_random_hover = QCheckBox("Enable Random Hover")
+        self.enable_random_hover = QCheckBox("Habilitar Hover Aleatorio")
         self.enable_random_hover.setChecked(True)
         mouse_layout.addRow(self.enable_random_hover)
         
         layout.addWidget(mouse_group)
         
-        # Timing Simulation
-        timing_group = QGroupBox("Timing Simulation")
+        # Simulación de Tiempos
+        timing_group = QGroupBox("Simulación de Tiempos")
         timing_layout = QFormLayout(timing_group)
         
         self.idle_time_min = QDoubleSpinBox()
         self.idle_time_min.setRange(0.5, 60.0)
         self.idle_time_min.setValue(5.0)
-        self.idle_time_min.setSuffix(" sec")
-        timing_layout.addRow("Min Idle Time:", self.idle_time_min)
+        self.idle_time_min.setSuffix(" seg")
+        timing_layout.addRow("Tiempo Inactivo Mínimo:", self.idle_time_min)
         
         self.idle_time_max = QDoubleSpinBox()
         self.idle_time_max.setRange(1.0, 120.0)
         self.idle_time_max.setValue(15.0)
-        self.idle_time_max.setSuffix(" sec")
-        timing_layout.addRow("Max Idle Time:", self.idle_time_max)
+        self.idle_time_max.setSuffix(" seg")
+        timing_layout.addRow("Tiempo Inactivo Máximo:", self.idle_time_max)
         
         self.random_action_prob = QSpinBox()
         self.random_action_prob.setRange(0, 50)
         self.random_action_prob.setValue(10)
         self.random_action_prob.setSuffix(" %")
-        timing_layout.addRow("Random Action Probability:", self.random_action_prob)
+        timing_layout.addRow("Probabilidad de Acción Aleatoria:", self.random_action_prob)
         
         layout.addWidget(timing_group)
         
-        # Scroll Simulation
-        scroll_group = QGroupBox("Scroll Simulation")
+        # Simulación de Desplazamiento
+        scroll_group = QGroupBox("Simulación de Desplazamiento")
         scroll_layout = QFormLayout(scroll_group)
         
-        self.scroll_enabled = QCheckBox("Enable Scroll Simulation")
+        self.scroll_enabled = QCheckBox("Habilitar Simulación de Desplazamiento")
         self.scroll_enabled.setChecked(True)
         scroll_layout.addRow(self.scroll_enabled)
         
-        self.enable_random_scroll = QCheckBox("Enable Random Scroll")
+        self.enable_random_scroll = QCheckBox("Habilitar Desplazamiento Aleatorio")
         self.enable_random_scroll.setChecked(True)
         scroll_layout.addRow(self.enable_random_scroll)
         
@@ -1004,37 +1003,37 @@ class SessionManagerGUI(QMainWindow):
         self.scroll_delta_min.setRange(10, 500)
         self.scroll_delta_min.setValue(50)
         self.scroll_delta_min.setSuffix(" px")
-        scroll_layout.addRow("Min Scroll Delta:", self.scroll_delta_min)
+        scroll_layout.addRow("Delta de Desplazamiento Mínimo:", self.scroll_delta_min)
         
         self.scroll_delta_max = QSpinBox()
         self.scroll_delta_max.setRange(50, 1000)
         self.scroll_delta_max.setValue(300)
         self.scroll_delta_max.setSuffix(" px")
-        scroll_layout.addRow("Max Scroll Delta:", self.scroll_delta_max)
+        scroll_layout.addRow("Delta de Desplazamiento Máximo:", self.scroll_delta_max)
         
         layout.addWidget(scroll_group)
         
-        # Typing Simulation
-        typing_group = QGroupBox("Typing Simulation")
+        # Simulación de Escritura
+        typing_group = QGroupBox("Simulación de Escritura")
         typing_layout = QFormLayout(typing_group)
         
         self.typing_speed_min = QSpinBox()
         self.typing_speed_min.setRange(10, 300)
         self.typing_speed_min.setValue(50)
         self.typing_speed_min.setSuffix(" ms")
-        typing_layout.addRow("Min Keystroke Delay:", self.typing_speed_min)
+        typing_layout.addRow("Retraso Mínimo entre Teclas:", self.typing_speed_min)
         
         self.typing_speed_max = QSpinBox()
         self.typing_speed_max.setRange(50, 500)
         self.typing_speed_max.setValue(200)
         self.typing_speed_max.setSuffix(" ms")
-        typing_layout.addRow("Max Keystroke Delay:", self.typing_speed_max)
+        typing_layout.addRow("Retraso Máximo entre Teclas:", self.typing_speed_max)
         
         self.typing_mistake_rate = QSpinBox()
         self.typing_mistake_rate.setRange(0, 10)
         self.typing_mistake_rate.setValue(2)
         self.typing_mistake_rate.setSuffix(" %")
-        typing_layout.addRow("Typo Rate:", self.typing_mistake_rate)
+        typing_layout.addRow("Tasa de Errores de Escritura:", self.typing_mistake_rate)
         
         layout.addWidget(typing_group)
         
@@ -1042,31 +1041,31 @@ class SessionManagerGUI(QMainWindow):
         return tab
     
     def _create_captcha_tab(self) -> QWidget:
-        """Create the CAPTCHA handling configuration tab (from fase2.txt - second block)."""
+        """Crear la pestaña de configuración de manejo de CAPTCHA (de fase2.txt - segundo bloque)."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # CAPTCHA Settings
-        captcha_group = QGroupBox("CAPTCHA Solving")
+        # Configuración de CAPTCHA
+        captcha_group = QGroupBox("Resolución de CAPTCHA")
         captcha_layout = QFormLayout(captcha_group)
         
-        self.captcha_enabled = QCheckBox("Enable Auto CAPTCHA Solving")
+        self.captcha_enabled = QCheckBox("Habilitar Resolución Automática de CAPTCHA")
         self.captcha_enabled.setChecked(False)
         captcha_layout.addRow(self.captcha_enabled)
         
         self.captcha_provider = QComboBox()
         self.captcha_provider.addItems(["2captcha", "anticaptcha", "capsolver"])
-        captcha_layout.addRow("Provider:", self.captcha_provider)
+        captcha_layout.addRow("Proveedor:", self.captcha_provider)
         
         self.captcha_api_key = QLineEdit()
         self.captcha_api_key.setEchoMode(QLineEdit.EchoMode.Password)
-        self.captcha_api_key.setPlaceholderText("Enter API key (stored securely)")
-        captcha_layout.addRow("API Key:", self.captcha_api_key)
+        self.captcha_api_key.setPlaceholderText("Ingrese clave API (almacenada de forma segura)")
+        captcha_layout.addRow("Clave API:", self.captcha_api_key)
         
         layout.addWidget(captcha_group)
         
-        # CAPTCHA Types
-        types_group = QGroupBox("Supported CAPTCHA Types")
+        # Tipos de CAPTCHA
+        types_group = QGroupBox("Tipos de CAPTCHA Soportados")
         types_layout = QVBoxLayout(types_group)
         
         self.captcha_recaptcha_v2 = QCheckBox("reCAPTCHA v2")
@@ -1083,64 +1082,64 @@ class SessionManagerGUI(QMainWindow):
         
         layout.addWidget(types_group)
         
-        # CAPTCHA Options
-        options_group = QGroupBox("Options")
+        # Opciones de CAPTCHA
+        options_group = QGroupBox("Opciones")
         options_layout = QFormLayout(options_group)
         
         self.captcha_timeout = QSpinBox()
         self.captcha_timeout.setRange(30, 300)
         self.captcha_timeout.setValue(120)
-        self.captcha_timeout.setSuffix(" sec")
-        options_layout.addRow("Solve Timeout:", self.captcha_timeout)
+        self.captcha_timeout.setSuffix(" seg")
+        options_layout.addRow("Tiempo de Espera para Resolver:", self.captcha_timeout)
         
         self.captcha_max_retries = QSpinBox()
         self.captcha_max_retries.setRange(1, 10)
         self.captcha_max_retries.setValue(3)
-        options_layout.addRow("Max Retries:", self.captcha_max_retries)
+        options_layout.addRow("Máximo de Reintentos:", self.captcha_max_retries)
         
         layout.addWidget(options_group)
         
-        # Retry Settings (from fase2.txt)
-        retry_group = QGroupBox("Retry Settings")
+        # Configuración de Reintentos (de fase2.txt)
+        retry_group = QGroupBox("Configuración de Reintentos")
         retry_layout = QFormLayout(retry_group)
         
         self.max_retries = QSpinBox()
         self.max_retries.setRange(0, 10)
         self.max_retries.setValue(3)
-        retry_layout.addRow("Max Action Retries:", self.max_retries)
+        retry_layout.addRow("Máximo de Reintentos de Acción:", self.max_retries)
         
         self.retry_delay = QDoubleSpinBox()
         self.retry_delay.setRange(0.5, 30.0)
         self.retry_delay.setValue(1.0)
-        self.retry_delay.setSuffix(" sec")
-        retry_layout.addRow("Retry Base Delay:", self.retry_delay)
+        self.retry_delay.setSuffix(" seg")
+        retry_layout.addRow("Retraso Base de Reintento:", self.retry_delay)
         
-        self.exponential_backoff = QCheckBox("Use Exponential Backoff")
+        self.exponential_backoff = QCheckBox("Usar Retroceso Exponencial")
         self.exponential_backoff.setChecked(True)
         retry_layout.addRow(self.exponential_backoff)
         
         layout.addWidget(retry_group)
         
-        # Secure Storage Info
+        # Información de Almacenamiento Seguro
         info_label = QLabel(
-            "ℹ️ API keys are stored securely using system keyring when available.\n"
-            "Falls back to environment variables if keyring is unavailable."
+            "ℹ️ Las claves API se almacenan de forma segura usando el llavero del sistema cuando está disponible.\n"
+            "Si el llavero no está disponible, se utilizan variables de entorno como respaldo."
         )
         info_label.setWordWrap(True)
         info_label.setStyleSheet("color: #808080; font-size: 10px;")
         layout.addWidget(info_label)
         
-        # Hybrid CAPTCHA settings (from fase3.txt)
-        hybrid_group = QGroupBox("Hybrid Solver (fase3)")
+        # Configuración híbrida de CAPTCHA (de fase3.txt)
+        hybrid_group = QGroupBox("Solucionador Híbrido (fase3)")
         hybrid_layout = QFormLayout(hybrid_group)
         
-        self.captcha_hybrid_mode = QCheckBox("Enable Hybrid Mode (AI first, human fallback)")
+        self.captcha_hybrid_mode = QCheckBox("Habilitar Modo Híbrido (IA primero, humano como respaldo)")
         self.captcha_hybrid_mode.setChecked(True)
         hybrid_layout.addRow(self.captcha_hybrid_mode)
         
         self.captcha_secondary_provider = QComboBox()
         self.captcha_secondary_provider.addItems(["capsolver", "anticaptcha", "2captcha"])
-        hybrid_layout.addRow("Fallback Provider:", self.captcha_secondary_provider)
+        hybrid_layout.addRow("Proveedor de Respaldo:", self.captcha_secondary_provider)
         
         layout.addWidget(hybrid_group)
         
@@ -1148,12 +1147,12 @@ class SessionManagerGUI(QMainWindow):
         return tab
     
     def _create_contingency_tab(self) -> QWidget:
-        """Create the contingency planning tab (from fase3.txt)."""
+        """Crear la pestaña de planificación de contingencia (de fase3.txt)."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # Eviction Thresholds
-        eviction_group = QGroupBox("Eviction Thresholds")
+        # Umbrales de Evicción
+        eviction_group = QGroupBox("Umbrales de Evicción")
         eviction_layout = QFormLayout(eviction_group)
         
         self.block_rate_threshold = QDoubleSpinBox()
@@ -1161,58 +1160,58 @@ class SessionManagerGUI(QMainWindow):
         self.block_rate_threshold.setValue(0.10)
         self.block_rate_threshold.setSingleStep(0.01)
         self.block_rate_threshold.setSuffix(" (5-10%)")
-        eviction_layout.addRow("Block Rate Threshold:", self.block_rate_threshold)
+        eviction_layout.addRow("Umbral de Tasa de Bloqueo:", self.block_rate_threshold)
         
         self.consecutive_failure_threshold = QSpinBox()
         self.consecutive_failure_threshold.setRange(1, 10)
         self.consecutive_failure_threshold.setValue(3)
-        eviction_layout.addRow("Consecutive Failures:", self.consecutive_failure_threshold)
+        eviction_layout.addRow("Fallas Consecutivas:", self.consecutive_failure_threshold)
         
         layout.addWidget(eviction_group)
         
-        # Cool-down Settings
-        cooldown_group = QGroupBox("Cool-down Settings")
+        # Configuración de Enfriamiento
+        cooldown_group = QGroupBox("Configuración de Enfriamiento")
         cooldown_layout = QFormLayout(cooldown_group)
         
         self.cool_down_min = QSpinBox()
         self.cool_down_min.setRange(60, 1800)
         self.cool_down_min.setValue(300)
-        self.cool_down_min.setSuffix(" sec (5 min)")
-        cooldown_layout.addRow("Min Cool-down:", self.cool_down_min)
+        self.cool_down_min.setSuffix(" seg (5 min)")
+        cooldown_layout.addRow("Enfriamiento Mínimo:", self.cool_down_min)
         
         self.cool_down_max = QSpinBox()
         self.cool_down_max.setRange(300, 3600)
         self.cool_down_max.setValue(1200)
-        self.cool_down_max.setSuffix(" sec (20 min)")
-        cooldown_layout.addRow("Max Cool-down:", self.cool_down_max)
+        self.cool_down_max.setSuffix(" seg (20 min)")
+        cooldown_layout.addRow("Enfriamiento Máximo:", self.cool_down_max)
         
         layout.addWidget(cooldown_group)
         
-        # Ban Recovery
-        recovery_group = QGroupBox("Ban Recovery Strategy")
+        # Recuperación de Bloqueo
+        recovery_group = QGroupBox("Estrategia de Recuperación de Bloqueo")
         recovery_layout = QFormLayout(recovery_group)
         
         self.ban_recovery_strategy = QComboBox()
         self.ban_recovery_strategy.addItems(["mobile_fallback", "throttle", "rotate_all"])
-        recovery_layout.addRow("Recovery Strategy:", self.ban_recovery_strategy)
+        recovery_layout.addRow("Estrategia de Recuperación:", self.ban_recovery_strategy)
         
-        self.enable_dynamic_throttling = QCheckBox("Enable Dynamic Throttling")
+        self.enable_dynamic_throttling = QCheckBox("Habilitar Limitación Dinámica")
         self.enable_dynamic_throttling.setChecked(True)
         recovery_layout.addRow(self.enable_dynamic_throttling)
         
         layout.addWidget(recovery_group)
         
-        # Sticky Sessions
-        sticky_group = QGroupBox("Sticky Sessions")
+        # Sesiones Persistentes
+        sticky_group = QGroupBox("Sesiones Persistentes")
         sticky_layout = QFormLayout(sticky_group)
         
         self.sticky_session_duration = QSpinBox()
         self.sticky_session_duration.setRange(60, 3600)
         self.sticky_session_duration.setValue(600)
-        self.sticky_session_duration.setSuffix(" sec (10 min)")
-        sticky_layout.addRow("Session Duration:", self.sticky_session_duration)
+        self.sticky_session_duration.setSuffix(" seg (10 min)")
+        sticky_layout.addRow("Duración de Sesión:", self.sticky_session_duration)
         
-        self.enable_session_persistence = QCheckBox("Enable Session Persistence")
+        self.enable_session_persistence = QCheckBox("Habilitar Persistencia de Sesión")
         self.enable_session_persistence.setChecked(True)
         sticky_layout.addRow(self.enable_session_persistence)
         
@@ -1222,40 +1221,40 @@ class SessionManagerGUI(QMainWindow):
         return tab
     
     def _create_advanced_behavior_tab(self) -> QWidget:
-        """Create the advanced behavior configuration tab (from fase3.txt)."""
+        """Crear la pestaña de configuración de comportamiento avanzado (de fase3.txt)."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # Polymorphic Fingerprinting
-        poly_group = QGroupBox("Polymorphic Fingerprinting")
+        # Huella Digital Polimórfica
+        poly_group = QGroupBox("Huella Digital Polimórfica")
         poly_layout = QFormLayout(poly_group)
         
-        self.polymorphic_enabled = QCheckBox("Enable Polymorphic Fingerprinting")
+        self.polymorphic_enabled = QCheckBox("Habilitar Huella Digital Polimórfica")
         self.polymorphic_enabled.setChecked(True)
         poly_layout.addRow(self.polymorphic_enabled)
         
         self.fingerprint_rotation_interval = QSpinBox()
         self.fingerprint_rotation_interval.setRange(300, 7200)
         self.fingerprint_rotation_interval.setValue(3600)
-        self.fingerprint_rotation_interval.setSuffix(" sec (1 hr)")
-        poly_layout.addRow("Rotation Interval:", self.fingerprint_rotation_interval)
+        self.fingerprint_rotation_interval.setSuffix(" seg (1 hr)")
+        poly_layout.addRow("Intervalo de Rotación:", self.fingerprint_rotation_interval)
         
         layout.addWidget(poly_group)
         
-        # OS-Level Input
-        os_group = QGroupBox("OS-Level Input Emulation")
+        # Entrada a Nivel de SO
+        os_group = QGroupBox("Emulación de Entrada a Nivel de SO")
         os_layout = QFormLayout(os_group)
         
-        self.os_level_input_enabled = QCheckBox("Enable OS-Level Inputs (nodriver-style)")
+        self.os_level_input_enabled = QCheckBox("Habilitar Entradas a Nivel de SO (estilo nodriver)")
         os_layout.addRow(self.os_level_input_enabled)
         
         layout.addWidget(os_group)
         
-        # Touch Emulation
-        touch_group = QGroupBox("Touch Emulation (Mobile)")
+        # Emulación Táctil
+        touch_group = QGroupBox("Emulación Táctil (Móvil)")
         touch_layout = QFormLayout(touch_group)
         
-        self.touch_emulation_enabled = QCheckBox("Enable Touch Emulation")
+        self.touch_emulation_enabled = QCheckBox("Habilitar Emulación Táctil")
         touch_layout.addRow(self.touch_emulation_enabled)
         
         self.touch_pressure_variation = QDoubleSpinBox()
@@ -1263,15 +1262,15 @@ class SessionManagerGUI(QMainWindow):
         self.touch_pressure_variation.setValue(0.2)
         self.touch_pressure_variation.setSingleStep(0.05)
         self.touch_pressure_variation.setSuffix(" (20%)")
-        touch_layout.addRow("Pressure Variation:", self.touch_pressure_variation)
+        touch_layout.addRow("Variación de Presión:", self.touch_pressure_variation)
         
         layout.addWidget(touch_group)
         
-        # Micro-jitters
-        jitter_group = QGroupBox("Micro-Jitters")
+        # Micro-movimientos
+        jitter_group = QGroupBox("Micro-movimientos")
         jitter_layout = QFormLayout(jitter_group)
         
-        self.micro_jitter_enabled = QCheckBox("Enable Micro-Jitters")
+        self.micro_jitter_enabled = QCheckBox("Habilitar Micro-movimientos")
         self.micro_jitter_enabled.setChecked(True)
         jitter_layout.addRow(self.micro_jitter_enabled)
         
@@ -1279,15 +1278,15 @@ class SessionManagerGUI(QMainWindow):
         self.micro_jitter_amplitude.setRange(1, 10)
         self.micro_jitter_amplitude.setValue(2)
         self.micro_jitter_amplitude.setSuffix(" px")
-        jitter_layout.addRow("Jitter Amplitude:", self.micro_jitter_amplitude)
+        jitter_layout.addRow("Amplitud del Movimiento:", self.micro_jitter_amplitude)
         
         layout.addWidget(jitter_group)
         
-        # Typing Patterns
-        typing_group = QGroupBox("Advanced Typing Patterns")
+        # Patrones de Escritura
+        typing_group = QGroupBox("Patrones de Escritura Avanzados")
         typing_layout = QFormLayout(typing_group)
         
-        self.typing_pressure_enabled = QCheckBox("Enable Typing Pressure Simulation")
+        self.typing_pressure_enabled = QCheckBox("Habilitar Simulación de Presión de Teclas")
         typing_layout.addRow(self.typing_pressure_enabled)
         
         self.typing_rhythm_variation = QDoubleSpinBox()
@@ -1295,7 +1294,7 @@ class SessionManagerGUI(QMainWindow):
         self.typing_rhythm_variation.setValue(0.15)
         self.typing_rhythm_variation.setSingleStep(0.05)
         self.typing_rhythm_variation.setSuffix(" (15%)")
-        typing_layout.addRow("Rhythm Variation:", self.typing_rhythm_variation)
+        typing_layout.addRow("Variación de Ritmo:", self.typing_rhythm_variation)
         
         layout.addWidget(typing_group)
         
@@ -1303,64 +1302,64 @@ class SessionManagerGUI(QMainWindow):
         return tab
     
     def _create_system_hiding_tab(self) -> QWidget:
-        """Create the system hiding configuration tab (from fase3.txt)."""
+        """Crear la pestaña de configuración de ocultación del sistema (de fase3.txt)."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # CDP Port Blocking
-        cdp_group = QGroupBox("CDP Port Blocking")
+        # Bloqueo de Puerto CDP
+        cdp_group = QGroupBox("Bloqueo de Puerto CDP")
         cdp_layout = QFormLayout(cdp_group)
         
-        self.block_cdp_ports = QCheckBox("Block CDP Debugging Ports")
+        self.block_cdp_ports = QCheckBox("Bloquear Puertos de Depuración CDP")
         self.block_cdp_ports.setChecked(True)
         cdp_layout.addRow(self.block_cdp_ports)
         
         self.cdp_port_default = QSpinBox()
         self.cdp_port_default.setRange(1, 65535)
         self.cdp_port_default.setValue(9222)
-        cdp_layout.addRow("CDP Port:", self.cdp_port_default)
+        cdp_layout.addRow("Puerto CDP:", self.cdp_port_default)
         
         layout.addWidget(cdp_group)
         
-        # Loopback/Interface Management
-        loopback_group = QGroupBox("Network Interface Management")
+        # Gestión de Interfaz de Red/Loopback
+        loopback_group = QGroupBox("Gestión de Interfaz de Red")
         loopback_layout = QFormLayout(loopback_group)
         
-        self.disable_loopback_services = QCheckBox("Disable Loopback Services")
+        self.disable_loopback_services = QCheckBox("Deshabilitar Servicios de Loopback")
         loopback_layout.addRow(self.disable_loopback_services)
         
         layout.addWidget(loopback_group)
         
-        # Ephemeral Port Randomization
-        port_group = QGroupBox("Ephemeral Port Randomization")
+        # Aleatorización de Puertos Efímeros
+        port_group = QGroupBox("Aleatorización de Puertos Efímeros")
         port_layout = QFormLayout(port_group)
         
-        self.randomize_ephemeral_ports = QCheckBox("Randomize Ephemeral Ports")
+        self.randomize_ephemeral_ports = QCheckBox("Aleatorizar Puertos Efímeros")
         self.randomize_ephemeral_ports.setChecked(True)
         port_layout.addRow(self.randomize_ephemeral_ports)
         
         self.ephemeral_port_min = QSpinBox()
         self.ephemeral_port_min.setRange(49152, 60000)
         self.ephemeral_port_min.setValue(49152)
-        port_layout.addRow("Min Port:", self.ephemeral_port_min)
+        port_layout.addRow("Puerto Mínimo:", self.ephemeral_port_min)
         
         self.ephemeral_port_max = QSpinBox()
         self.ephemeral_port_max.setRange(55000, 65535)
         self.ephemeral_port_max.setValue(65535)
-        port_layout.addRow("Max Port:", self.ephemeral_port_max)
+        port_layout.addRow("Puerto Máximo:", self.ephemeral_port_max)
         
         layout.addWidget(port_group)
         
-        # WebRTC Complete Block
-        webrtc_group = QGroupBox("WebRTC Protection")
+        # Bloqueo Completo de WebRTC
+        webrtc_group = QGroupBox("Protección WebRTC")
         webrtc_layout = QFormLayout(webrtc_group)
         
-        self.block_webrtc_completely = QCheckBox("Block WebRTC Completely (aggressive)")
+        self.block_webrtc_completely = QCheckBox("Bloquear WebRTC Completamente (agresivo)")
         webrtc_layout.addRow(self.block_webrtc_completely)
         
         webrtc_info = QLabel(
-            "⚠️ Complete WebRTC blocking is more aggressive than spoofing.\n"
-            "May break some video/audio features."
+            "⚠️ El bloqueo completo de WebRTC es más agresivo que la suplantación.\n"
+            "Puede afectar algunas funciones de video/audio."
         )
         webrtc_info.setWordWrap(True)
         webrtc_info.setStyleSheet("color: #ffa500; font-size: 10px;")
@@ -1368,26 +1367,26 @@ class SessionManagerGUI(QMainWindow):
         
         layout.addWidget(webrtc_group)
         
-        # MFA Contingency (from fase3.txt)
-        mfa_group = QGroupBox("MFA Contingency")
+        # Contingencia MFA (de fase3.txt)
+        mfa_group = QGroupBox("Contingencia MFA")
         mfa_layout = QFormLayout(mfa_group)
         
-        self.mfa_simulation_enabled = QCheckBox("Enable MFA Simulation")
+        self.mfa_simulation_enabled = QCheckBox("Habilitar Simulación MFA")
         mfa_layout.addRow(self.mfa_simulation_enabled)
         
         self.mfa_method = QComboBox()
-        self.mfa_method.addItems(["none", "email", "sms"])
-        mfa_layout.addRow("MFA Method:", self.mfa_method)
+        self.mfa_method.addItems(["ninguno", "email", "sms"])
+        mfa_layout.addRow("Método MFA:", self.mfa_method)
         
         self.mfa_timeout = QSpinBox()
         self.mfa_timeout.setRange(30, 300)
         self.mfa_timeout.setValue(120)
-        self.mfa_timeout.setSuffix(" sec")
-        mfa_layout.addRow("MFA Timeout:", self.mfa_timeout)
+        self.mfa_timeout.setSuffix(" seg")
+        mfa_layout.addRow("Tiempo de Espera MFA:", self.mfa_timeout)
         
         mfa_warning = QLabel(
-            "⚠️ MFA simulation is for testing purposes only.\n"
-            "Use ethically and comply with platform terms of service."
+            "⚠️ La simulación MFA es solo para fines de prueba.\n"
+            "Úsela de manera ética y cumpla con los términos de servicio de las plataformas."
         )
         mfa_warning.setWordWrap(True)
         mfa_warning.setStyleSheet("color: #ff6b6b; font-size: 10px;")
@@ -1399,12 +1398,12 @@ class SessionManagerGUI(QMainWindow):
         return tab
     
     def _create_logging_tab(self) -> QWidget:
-        """Create the logging/monitoring tab."""
+        """Crear la pestaña de registros/monitoreo."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # Log Display
-        log_group = QGroupBox("Session Logs")
+        # Visualización de Registros
+        log_group = QGroupBox("Registros de Sesión")
         log_layout = QVBoxLayout(log_group)
         
         self.log_display = QTextEdit()
@@ -1420,11 +1419,11 @@ class SessionManagerGUI(QMainWindow):
         
         log_btn_layout = QHBoxLayout()
         
-        clear_log_btn = QPushButton("Clear Logs")
+        clear_log_btn = QPushButton("Limpiar Registros")
         clear_log_btn.clicked.connect(self._clear_logs)
         log_btn_layout.addWidget(clear_log_btn)
         
-        export_log_btn = QPushButton("Export Logs...")
+        export_log_btn = QPushButton("Exportar Registros...")
         export_log_btn.clicked.connect(self._export_logs)
         log_btn_layout.addWidget(export_log_btn)
         
@@ -1435,13 +1434,13 @@ class SessionManagerGUI(QMainWindow):
         return tab
     
     def _setup_status_bar(self):
-        """Setup the status bar."""
+        """Configurar la barra de estado."""
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
-        self.status_bar.showMessage("Ready")
+        self.status_bar.showMessage("Listo")
     
     def _load_sessions_list(self):
-        """Load sessions into the list widget."""
+        """Cargar sesiones en el widget de lista."""
         self.session_list.clear()
         for session in self.config_manager.get_all_sessions():
             item = QListWidgetItem(f"📋 {session.name}")
@@ -1449,24 +1448,24 @@ class SessionManagerGUI(QMainWindow):
             self.session_list.addItem(item)
     
     def _load_proxy_pool(self):
-        """Load proxies into the pool list."""
+        """Cargar proxies en la lista del pool."""
         self.proxy_pool_list.clear()
         for proxy in self.proxy_manager.get_all_proxies():
             status = "✅" if proxy.is_active else "❌"
             self.proxy_pool_list.addItem(f"{status} {proxy.server}:{proxy.port}")
     
     def _on_session_selected(self, item: QListWidgetItem):
-        """Handle session selection."""
+        """Manejar selección de sesión."""
         session_id = item.data(Qt.ItemDataRole.UserRole)
         self.current_session = self.config_manager.get_session(session_id)
         
         if self.current_session:
             self._populate_form(self.current_session)
-            self.status_bar.showMessage(f"Loaded session: {self.current_session.name}")
+            self.status_bar.showMessage(f"Sesión cargada: {self.current_session.name}")
     
     def _populate_form(self, session: SessionConfig):
-        """Populate the form with session data."""
-        # Basic info
+        """Llenar el formulario con datos de sesión."""
+        # Información básica
         self.session_name_edit.setText(session.name)
         
         # Behavior
@@ -1616,12 +1615,12 @@ class SessionManagerGUI(QMainWindow):
         self.mfa_timeout.setValue(mfa.mfa_timeout_sec)
     
     def _on_session_name_changed(self, text: str):
-        """Handle session name change."""
+        """Manejar cambio de nombre de sesión."""
         if self.current_session:
             self.current_session.name = text
     
     def _on_device_preset_changed(self, index: int):
-        """Handle device preset change."""
+        """Manejar cambio de preset de dispositivo."""
         preset_key = self.device_preset.itemData(index)
         fingerprint = self.fingerprint_manager.generate_fingerprint(preset_key)
         
@@ -1632,11 +1631,11 @@ class SessionManagerGUI(QMainWindow):
         self.device_memory.setValue(fingerprint.device_memory)
     
     def _add_session(self):
-        """Add a new session."""
-        session = self.config_manager.create_session(f"Session {len(self.config_manager.get_all_sessions()) + 1}")
+        """Agregar una nueva sesión."""
+        session = self.config_manager.create_session(f"Sesión {len(self.config_manager.get_all_sessions()) + 1}")
         self._load_sessions_list()
         
-        # Select the new session
+        # Seleccionar la nueva sesión
         for i in range(self.session_list.count()):
             item = self.session_list.item(i)
             if item.data(Qt.ItemDataRole.UserRole) == session.session_id:
@@ -1644,26 +1643,26 @@ class SessionManagerGUI(QMainWindow):
                 self._on_session_selected(item)
                 break
         
-        self.status_bar.showMessage(f"Created new session: {session.name}")
+        self.status_bar.showMessage(f"Nueva sesión creada: {session.name}")
     
     def _remove_session(self):
-        """Remove the selected session."""
+        """Eliminar la sesión seleccionada."""
         current_item = self.session_list.currentItem()
         if not current_item:
-            QMessageBox.warning(self, "Warning", "Please select a session to remove.")
+            QMessageBox.warning(self, "Advertencia", "Por favor seleccione una sesión para eliminar.")
             return
         
         session_id = current_item.data(Qt.ItemDataRole.UserRole)
         session = self.config_manager.get_session(session_id)
         
         reply = QMessageBox.question(
-            self, "Confirm Removal",
-            f"Are you sure you want to remove '{session.name}'?",
+            self, "Confirmar Eliminación",
+            f"¿Está seguro de que desea eliminar '{session.name}'?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         
         if reply == QMessageBox.StandardButton.Yes:
-            # Stop if running
+            # Detener si está ejecutándose
             if session_id in self.workers:
                 self.workers[session_id].stop()
                 self.workers[session_id].wait()
@@ -1673,12 +1672,12 @@ class SessionManagerGUI(QMainWindow):
             self._load_sessions_list()
             self.current_session = None
             self.session_name_edit.clear()
-            self.status_bar.showMessage(f"Removed session: {session.name}")
+            self.status_bar.showMessage(f"Sesión eliminada: {session.name}")
     
     def _save_current_session(self):
-        """Save the current session configuration."""
+        """Guardar la configuración de la sesión actual."""
         if not self.current_session:
-            QMessageBox.warning(self, "Warning", "No session selected.")
+            QMessageBox.warning(self, "Advertencia", "No hay sesión seleccionada.")
             return
         
         session = self.current_session
@@ -1802,7 +1801,7 @@ class SessionManagerGUI(QMainWindow):
         session.mfa.mfa_method = self.mfa_method.currentText()
         session.mfa.mfa_timeout_sec = self.mfa_timeout.value()
         
-        # Store CAPTCHA API key securely (from fase2.txt)
+        # Almacenar clave API de CAPTCHA de forma segura (de fase2.txt)
         api_key = self.captcha_api_key.text()
         if api_key:
             try:
@@ -1810,22 +1809,22 @@ class SessionManagerGUI(QMainWindow):
                 store = SecureCredentialStore()
                 store.store_credential(f"captcha_api_key_{session.session_id}", api_key)
             except Exception as e:
-                logger.warning(f"Failed to store API key securely: {e}")
+                logger.warning(f"Error al almacenar clave API de forma segura: {e}")
         
         self.config_manager.update_session(session)
         self._load_sessions_list()
-        self.status_bar.showMessage(f"Saved session: {session.name}")
+        self.status_bar.showMessage(f"Sesión guardada: {session.name}")
     
     def _start_selected_session(self):
-        """Start the selected session."""
+        """Iniciar la sesión seleccionada."""
         if not self.current_session:
-            QMessageBox.warning(self, "Warning", "Please select a session to start.")
+            QMessageBox.warning(self, "Advertencia", "Por favor seleccione una sesión para iniciar.")
             return
         
         session_id = self.current_session.session_id
         
         if session_id in self.workers:
-            QMessageBox.warning(self, "Warning", "Session is already running.")
+            QMessageBox.warning(self, "Advertencia", "La sesión ya está en ejecución.")
             return
         
         worker = SessionWorker(self.current_session)
@@ -1836,25 +1835,25 @@ class SessionManagerGUI(QMainWindow):
         self.workers[session_id] = worker
         worker.start()
         
-        self.status_bar.showMessage(f"Started session: {self.current_session.name}")
+        self.status_bar.showMessage(f"Sesión iniciada: {self.current_session.name}")
     
     def _stop_selected_session(self):
-        """Stop the selected session."""
+        """Detener la sesión seleccionada."""
         if not self.current_session:
-            QMessageBox.warning(self, "Warning", "Please select a session to stop.")
+            QMessageBox.warning(self, "Advertencia", "Por favor seleccione una sesión para detener.")
             return
         
         session_id = self.current_session.session_id
         
         if session_id not in self.workers:
-            QMessageBox.warning(self, "Warning", "Session is not running.")
+            QMessageBox.warning(self, "Advertencia", "La sesión no está en ejecución.")
             return
         
         self.workers[session_id].stop()
-        self.status_bar.showMessage(f"Stopping session: {self.current_session.name}")
+        self.status_bar.showMessage(f"Deteniendo sesión: {self.current_session.name}")
     
     def _start_all_sessions(self):
-        """Start all sessions."""
+        """Iniciar todas las sesiones."""
         for session in self.config_manager.get_all_sessions():
             if session.session_id not in self.workers:
                 worker = SessionWorker(session)
@@ -1865,39 +1864,39 @@ class SessionManagerGUI(QMainWindow):
                 self.workers[session.session_id] = worker
                 worker.start()
         
-        self.status_bar.showMessage("Started all sessions")
+        self.status_bar.showMessage("Todas las sesiones iniciadas")
     
     def _stop_all_sessions(self):
-        """Stop all running sessions."""
+        """Detener todas las sesiones en ejecución."""
         for session_id, worker in self.workers.items():
             worker.stop()
         
-        self.status_bar.showMessage("Stopping all sessions")
+        self.status_bar.showMessage("Deteniendo todas las sesiones")
     
     def _on_session_status_update(self, session_id: str, status: str):
-        """Handle session status update."""
+        """Manejar actualización de estado de sesión."""
         session = self.config_manager.get_session(session_id)
         if session:
             session.status = status
     
     def _on_log_message(self, session_id: str, message: str):
-        """Handle log message from session."""
+        """Manejar mensaje de registro de sesión."""
         session = self.config_manager.get_session(session_id)
         name = session.name if session else session_id
         self.log_display.append(f"[{name}] {message}")
     
     def _on_session_finished(self, session_id: str):
-        """Handle session completion."""
+        """Manejar finalización de sesión."""
         if session_id in self.workers:
             del self.workers[session_id]
     
     def _add_proxy_to_pool(self):
-        """Add a proxy to the pool."""
+        """Agregar un proxy al pool."""
         server = self.proxy_server.text()
         port = self.proxy_port.value()
         
         if not server:
-            QMessageBox.warning(self, "Warning", "Please enter a proxy server.")
+            QMessageBox.warning(self, "Advertencia", "Por favor ingrese un servidor proxy.")
             return
         
         proxy = ProxyEntry(
@@ -1910,40 +1909,40 @@ class SessionManagerGUI(QMainWindow):
         
         self.proxy_manager.add_proxy(proxy)
         self._load_proxy_pool()
-        self.status_bar.showMessage(f"Added proxy: {server}:{port}")
+        self.status_bar.showMessage(f"Proxy agregado: {server}:{port}")
     
     def _remove_proxy_from_pool(self):
-        """Remove selected proxy from pool."""
+        """Eliminar proxy seleccionado del pool."""
         current_row = self.proxy_pool_list.currentRow()
         if current_row >= 0:
             self.proxy_manager.remove_proxy(current_row)
             self._load_proxy_pool()
     
     def _import_proxies(self):
-        """Import proxies from file."""
+        """Importar proxies desde archivo."""
         file_path, _ = QFileDialog.getOpenFileName(
-            self, "Import Proxies",
-            "", "Text Files (*.txt);;All Files (*)"
+            self, "Importar Proxies",
+            "", "Archivos de Texto (*.txt);;Todos los Archivos (*)"
         )
         
         if file_path:
             count = self.proxy_manager.import_from_file(Path(file_path))
             self._load_proxy_pool()
             QMessageBox.information(
-                self, "Import Complete",
-                f"Successfully imported {count} proxies."
+                self, "Importación Completa",
+                f"Se importaron {count} proxies exitosamente."
             )
     
     def _validate_proxy_pool(self):
-        """Validate all proxies in the pool (from fase2.txt)."""
+        """Validar todos los proxies en el pool (de fase2.txt)."""
         proxies = self.proxy_manager.get_all_proxies()
         if not proxies:
-            QMessageBox.information(self, "Info", "No proxies to validate.")
+            QMessageBox.information(self, "Información", "No hay proxies para validar.")
             return
         
-        self.status_bar.showMessage("Validating proxies...")
+        self.status_bar.showMessage("Validando proxies...")
         
-        # Run validation in a thread to avoid blocking UI
+        # Ejecutar validación en un hilo para evitar bloquear la UI
         class ValidatorWorker(QThread):
             finished = pyqtSignal(list)
             
@@ -1981,7 +1980,7 @@ class SessionManagerGUI(QMainWindow):
             valid_count = sum(1 for r in results if r.get("valid", False))
             invalid_count = len(results) - valid_count
             
-            # Update proxy status
+            # Actualizar estado del proxy
             for i, result in enumerate(results):
                 if i < len(proxies):
                     proxies[i].is_active = result.get("valid", False)
@@ -1990,36 +1989,36 @@ class SessionManagerGUI(QMainWindow):
             self._load_proxy_pool()
             
             QMessageBox.information(
-                self, "Validation Complete",
-                f"Valid: {valid_count}\nInvalid: {invalid_count}"
+                self, "Validación Completa",
+                f"Válidos: {valid_count}\nInválidos: {invalid_count}"
             )
-            self.status_bar.showMessage(f"Validated {len(results)} proxies")
+            self.status_bar.showMessage(f"Se validaron {len(results)} proxies")
         
         self._validator_worker = ValidatorWorker(proxies)
         self._validator_worker.finished.connect(on_validation_complete)
         self._validator_worker.start()
     
     def _clear_logs(self):
-        """Clear the log display."""
+        """Limpiar la visualización de registros."""
         self.log_display.clear()
     
     def _export_logs(self):
-        """Export logs to file."""
+        """Exportar registros a archivo."""
         file_path, _ = QFileDialog.getSaveFileName(
-            self, "Export Logs",
-            "session_logs.txt", "Text Files (*.txt)"
+            self, "Exportar Registros",
+            "registros_sesion.txt", "Archivos de Texto (*.txt)"
         )
         
         if file_path:
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(self.log_display.toPlainText())
-            self.status_bar.showMessage(f"Logs exported to: {file_path}")
+            self.status_bar.showMessage(f"Registros exportados a: {file_path}")
     
     def _update_resource_usage(self):
-        """Update resource usage display."""
+        """Actualizar visualización de uso de recursos."""
         if not PSUTIL_AVAILABLE:
-            self.cpu_label.setText("CPU: N/A")
-            self.ram_label.setText("RAM: N/A")
+            self.cpu_label.setText("CPU: N/D")
+            self.ram_label.setText("RAM: N/D")
             return
         
         try:
@@ -2032,7 +2031,7 @@ class SessionManagerGUI(QMainWindow):
             self.ram_label.setText(f"RAM: {ram:.1f}%")
             self.ram_bar.setValue(int(ram))
             
-            # Color coding based on usage
+            # Código de colores basado en uso
             if cpu > 80:
                 self.cpu_bar.setStyleSheet("QProgressBar::chunk { background-color: #c42b1c; }")
             elif cpu > 60:
@@ -2048,17 +2047,17 @@ class SessionManagerGUI(QMainWindow):
                 self.ram_bar.setStyleSheet("QProgressBar::chunk { background-color: #16825d; }")
                 
         except Exception:
-            # Error getting resource usage
-            self.cpu_label.setText("CPU: N/A")
-            self.ram_label.setText("RAM: N/A")
+            # Error obteniendo uso de recursos
+            self.cpu_label.setText("CPU: N/D")
+            self.ram_label.setText("RAM: N/D")
     
     def closeEvent(self, event):
-        """Handle window close event."""
-        # Stop all running sessions
+        """Manejar evento de cierre de ventana."""
+        # Detener todas las sesiones en ejecución
         if self.workers:
             reply = QMessageBox.question(
-                self, "Confirm Exit",
-                "There are running sessions. Stop all and exit?",
+                self, "Confirmar Salida",
+                "Hay sesiones en ejecución. ¿Detener todas y salir?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             
@@ -2076,12 +2075,12 @@ class SessionManagerGUI(QMainWindow):
 
 
 def main():
-    """Main entry point for the GUI application."""
+    """Punto de entrada principal para la aplicación GUI."""
     app = QApplication(sys.argv)
     
-    # Set application metadata
+    # Establecer metadatos de la aplicación
     app.setApplicationName("BotSOS")
-    app.setApplicationVersion("1.0.0")
+    app.setApplicationVersion("1.2.0")
     app.setOrganizationName("BotSOS")
     
     window = SessionManagerGUI()

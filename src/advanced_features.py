@@ -1,17 +1,19 @@
 """
-Advanced Features Module
+Módulo de Características Avanzadas
 
-Handles advanced anti-detection features including:
-- CAPTCHA solving integration
-- Advanced fingerprint spoofing (TLS, WebGPU, Audio)
-- Behavioral simulation (mouse jitter, delays, scrolling)
-- Proxy validation
-- Secure credential storage
-- Retry mechanisms
-- Contingency planning and recovery (fase3.txt)
-- System hiding and port blocking (fase3.txt)
-- Anomaly detection (fase3.txt)
-- Polymorphic fingerprinting (fase3.txt)
+Maneja características avanzadas de anti-detección incluyendo:
+- Integración de resolución de CAPTCHA
+- Suplantación avanzada de huella digital (TLS, WebGPU, Audio)
+- Simulación de comportamiento (movimiento del ratón, retrasos, desplazamiento)
+- Validación de proxies
+- Almacenamiento seguro de credenciales
+- Mecanismos de reintento
+- Planificación de contingencia y recuperación (fase3.txt)
+- Ocultación del sistema y bloqueo de puertos (fase3.txt)
+- Detección de anomalías (fase3.txt)
+- Huella digital polimórfica (fase3.txt)
+
+Diseñado exclusivamente para Windows.
 """
 
 import asyncio
@@ -619,15 +621,15 @@ class SecureCredentialStore:
                 keyring.set_password(self.SERVICE_NAME, key, value)
                 return True
             except Exception as e:
-                logger.error(f"Failed to store credential in keyring: {e}")
+                logger.error(f"Error al almacenar credencial en keyring: {e}")
         
-        # Fallback: store in environment variable (less secure)
+        # Alternativa: almacenar en variable de entorno (menos seguro)
         os.environ[f"BOTSOS_{key.upper()}"] = value
-        logger.warning(f"Stored credential in environment variable (keyring not available)")
+        logger.warning("Credencial almacenada en variable de entorno (keyring no disponible)")
         return True
     
     def get_credential(self, key: str) -> Optional[str]:
-        """Retrieve a credential.
+        """Obtener una credencial.
         
         Args:
             key: Credential key/name.

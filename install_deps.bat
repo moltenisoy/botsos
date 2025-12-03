@@ -1,62 +1,62 @@
 @echo off
-REM BotSOS - Installation Script for Windows
-REM This script sets up the development environment
+REM BotSOS - Script de Instalación para Windows
+REM Este script configura el entorno de desarrollo
 
 echo ========================================
-echo BotSOS - Multi-Model Session Manager
-echo Installation Script
+echo BotSOS - Administrador de Sesiones Multi-Modelo
+echo Script de Instalacion
 echo ========================================
 echo.
 
-REM Check Python installation
+REM Verificar instalación de Python
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo ERROR: Python is not installed or not in PATH
-    echo Please install Python 3.11+ from https://python.org
+    echo ERROR: Python no esta instalado o no esta en PATH
+    echo Por favor instale Python 3.11+ desde https://python.org
     pause
     exit /b 1
 )
 
-echo [1/5] Creating virtual environment...
+echo [1/5] Creando entorno virtual...
 python -m venv venv
 if errorlevel 1 (
-    echo ERROR: Failed to create virtual environment
+    echo ERROR: Fallo al crear el entorno virtual
     pause
     exit /b 1
 )
 
-echo [2/5] Activating virtual environment...
+echo [2/5] Activando entorno virtual...
 call venv\Scripts\activate.bat
 
-echo [3/5] Upgrading pip...
+echo [3/5] Actualizando pip...
 python -m pip install --upgrade pip
 
-echo [4/5] Installing dependencies...
+echo [4/5] Instalando dependencias...
 pip install -r requirements.txt
 if errorlevel 1 (
-    echo ERROR: Failed to install dependencies
+    echo ERROR: Fallo al instalar dependencias
     pause
     exit /b 1
 )
 
-echo [5/5] Installing Playwright browsers...
+echo [5/5] Instalando navegadores de Playwright...
 playwright install chromium
 if errorlevel 1 (
-    echo WARNING: Failed to install Playwright browsers
-    echo You may need to run 'playwright install' manually
+    echo ADVERTENCIA: Fallo al instalar navegadores de Playwright
+    echo Puede que necesite ejecutar 'playwright install' manualmente
 )
 
 echo.
 echo ========================================
-echo Installation Complete!
+echo Instalacion Completa!
 echo ========================================
 echo.
-echo To run the application:
-echo   1. Activate the virtual environment: venv\Scripts\activate
-echo   2. Run: python main.py
+echo Para ejecutar la aplicacion:
+echo   1. Active el entorno virtual: venv\Scripts\activate
+echo   2. Ejecute: python main.py
 echo.
-echo Make sure Ollama is installed and running:
-echo   - Download from: https://ollama.ai
-echo   - Run: ollama pull llama3.1:8b
+echo Asegurese de que Ollama este instalado y ejecutandose:
+echo   - Descargue desde: https://ollama.ai
+echo   - Ejecute: ollama pull llama3.1:8b
 echo.
 pause

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
-BotSOS - Multi-Model Session Manager
+BotSOS - Administrador de Sesiones Multi-Modelo
 
-Main entry point for the application.
-Run this file to start the GUI application.
+Punto de entrada principal para la aplicación.
+Ejecute este archivo para iniciar la aplicación GUI.
 
-Usage:
+Diseñado exclusivamente para Windows.
+
+Uso:
     python main.py
 """
 
@@ -13,12 +15,12 @@ import sys
 import logging
 from pathlib import Path
 
-# Add src to path for imports
+# Agregar src al path para imports
 sys.path.insert(0, str(Path(__file__).parent))
 
 
 def setup_logging():
-    """Configure application logging."""
+    """Configurar el registro de la aplicación."""
     log_dir = Path(__file__).parent / "logs"
     log_dir.mkdir(exist_ok=True)
     
@@ -33,7 +35,7 @@ def setup_logging():
 
 
 def check_dependencies():
-    """Check if required dependencies are installed."""
+    """Verificar si las dependencias requeridas están instaladas."""
     missing = []
     
     try:
@@ -44,36 +46,36 @@ def check_dependencies():
     try:
         import playwright
     except ImportError:
-        missing.append("playwright (run: pip install playwright && playwright install)")
+        missing.append("playwright (ejecute: pip install playwright && playwright install)")
     
     if missing:
-        print("Missing dependencies:")
+        print("Dependencias faltantes:")
         for dep in missing:
             print(f"  - {dep}")
-        print("\nInstall with: pip install -r requirements.txt")
-        print("Then run: playwright install")
+        print("\nInstale con: pip install -r requirements.txt")
+        print("Luego ejecute: playwright install")
         return False
     
     return True
 
 
 def main():
-    """Main application entry point."""
+    """Punto de entrada principal de la aplicación."""
     setup_logging()
     logger = logging.getLogger(__name__)
     
-    logger.info("Starting BotSOS - Multi-Model Session Manager")
+    logger.info("Iniciando BotSOS - Administrador de Sesiones Multi-Modelo")
     
-    # Check dependencies
+    # Verificar dependencias
     if not check_dependencies():
         sys.exit(1)
     
-    # Import and run GUI
+    # Importar y ejecutar GUI
     try:
         from src.session_manager_gui import main as gui_main
         gui_main()
     except Exception as e:
-        logger.exception(f"Application error: {e}")
+        logger.exception(f"Error de aplicación: {e}")
         sys.exit(1)
 
 

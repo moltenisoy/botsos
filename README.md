@@ -1,154 +1,133 @@
-# BotSOS - Multi-Model Session Manager
+# BotSOS - Administrador de Sesiones Multi-Modelo
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.11+-blue.svg" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/PyQt6-6.6+-green.svg" alt="PyQt6">
   <img src="https://img.shields.io/badge/Playwright-1.40+-orange.svg" alt="Playwright">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+  <img src="https://img.shields.io/badge/Windows-11-0078D6.svg" alt="Windows 11">
+  <img src="https://img.shields.io/badge/Licencia-MIT-yellow.svg" alt="Licencia">
 </p>
 
-A professional session manager for running multiple LLM-powered browser automation instances with advanced anti-detection features.
+Un administrador de sesiones profesional para ejecutar múltiples instancias de automatización de navegador con LLM, con características avanzadas de anti-detección.
 
-## 🚀 Features
+**⚠️ Este proyecto está diseñado exclusivamente para Windows.**
 
-### Core Functionality
-- **Multi-Session Management**: Run and manage multiple browser automation sessions simultaneously
-- **Professional GUI**: Modern PyQt6-based interface with dark theme
-- **LLM Integration**: Connect with local LLM models via Ollama (Llama 3.1, Qwen, Mistral, etc.)
-- **Browser Automation**: Powered by Playwright for reliable browser control
-- **QThreadPool Parallelism**: Safe parallel session execution (Phase 2)
+## 🚀 Características
 
-### Anti-Detection Features
-- **Device Fingerprinting**: Customizable device profiles (Windows, macOS, Android, Linux)
-- **Canvas/WebGL Noise**: Inject noise to prevent canvas fingerprinting
-- **WebRTC Protection**: Block WebRTC IP leaks
-- **Audio Context Spoofing**: Randomize audio fingerprints
-- **User-Agent Randomization**: Rotate user agents from predefined pools
-- **TLS/JA3 Fingerprint Spoofing**: Mimic browser TLS signatures (Phase 2)
-- **WebGPU Spoofing**: Spoof GPU information (Phase 2)
-- **Client Hints Override**: Customize browser client hints (Phase 2)
-- **Font Spoofing**: Custom font list to avoid fingerprinting (Phase 2)
+### Funcionalidad Principal
+- **Gestión Multi-Sesión**: Ejecuta y administra múltiples sesiones de automatización de navegador simultáneamente
+- **Interfaz Gráfica Profesional**: Interfaz moderna basada en PyQt6 con tema oscuro
+- **Integración con LLM**: Conecta con modelos LLM locales a través de Ollama (Llama 3.1, Qwen, Mistral, etc.)
+- **Automatización del Navegador**: Potenciado por Playwright para control confiable del navegador
+- **Paralelismo con QThreadPool**: Ejecución paralela segura de sesiones (Fase 2)
 
-### Proxy Management
-- **Proxy Pool**: Manage a pool of proxies with rotation
-- **Multiple Protocols**: Support for HTTP, HTTPS, and SOCKS5 proxies
-- **Health Tracking**: Monitor proxy success/failure rates
-- **Smart Rotation**: Round-robin, random, or best-performance selection
-- **Proxy Validation**: Test proxies before use (Phase 2)
-- **Auto-deactivation**: Automatically disable failed proxies (Phase 2)
+### Características Anti-Detección
+- **Huella Digital de Dispositivo**: Perfiles de dispositivo personalizables (Windows, Android)
+- **Ruido en Canvas/WebGL**: Inyecta ruido para prevenir fingerprinting de canvas
+- **Protección WebRTC**: Bloquea fugas de IP por WebRTC
+- **Suplantación de Contexto de Audio**: Aleatoriza huellas digitales de audio
+- **Aleatorización de User-Agent**: Rota user agents de pools predefinidos
+- **Suplantación de Huella Digital TLS/JA3**: Imita firmas TLS de navegadores (Fase 2)
+- **Suplantación de WebGPU**: Suplanta información de GPU (Fase 2)
+- **Sobrescritura de Client Hints**: Personaliza client hints del navegador (Fase 2)
+- **Suplantación de Fuentes**: Lista de fuentes personalizada para evitar fingerprinting (Fase 2)
 
-### Behavior Simulation (Phase 2)
-- **Mouse Jitter**: Human-like mouse movement with configurable jitter
-- **Random Hover**: Simulate natural hovering behavior
-- **Scroll Simulation**: Realistic scrolling patterns
-- **Typing Simulation**: Variable keystroke delays with typo simulation
-- **Idle Time**: Random pauses between actions
-- **Random Actions**: Configurable probability for random interactions
+### Gestión de Proxies
+- **Pool de Proxies**: Administra un pool de proxies con rotación
+- **Múltiples Protocolos**: Soporte para proxies HTTP, HTTPS y SOCKS5
+- **Seguimiento de Salud**: Monitorea tasas de éxito/fallo de proxies
+- **Rotación Inteligente**: Selección round-robin, aleatoria o por mejor rendimiento
+- **Validación de Proxies**: Prueba proxies antes de usar (Fase 2)
+- **Auto-desactivación**: Desactiva automáticamente proxies fallidos (Fase 2)
 
-### CAPTCHA Handling (Phase 2)
-- **2Captcha Integration**: Automatic CAPTCHA solving
-- **Multiple Providers**: Support for 2captcha, anticaptcha, capsolver
-- **Supported Types**: reCAPTCHA v2/v3, hCaptcha
-- **Secure Storage**: API keys stored securely via keyring
+### Simulación de Comportamiento (Fase 2)
+- **Movimiento Aleatorio del Ratón**: Movimiento de ratón tipo humano con jitter configurable
+- **Hover Aleatorio**: Simula comportamiento de hover natural
+- **Simulación de Desplazamiento**: Patrones de desplazamiento realistas
+- **Simulación de Escritura**: Retrasos variables entre teclas con simulación de errores
+- **Tiempo Inactivo**: Pausas aleatorias entre acciones
+- **Acciones Aleatorias**: Probabilidad configurable para interacciones aleatorias
 
-### Session Configuration
-- **Behavior Settings**: Configure action delays, view times, and enabled actions
-- **Persistent Sessions**: Save browser cookies and state across runs
-- **Custom Routines**: Define predefined automation routines (YAML/JSON)
-- **Resource Monitoring**: Real-time CPU and RAM usage display
-- **Retry Logic**: Configurable retries with exponential backoff (Phase 2)
-- **Advanced Logging**: Rotating log files per session (Phase 2)
+### Manejo de CAPTCHA (Fase 2)
+- **Integración con 2Captcha**: Resolución automática de CAPTCHA
+- **Múltiples Proveedores**: Soporte para 2captcha, anticaptcha, capsolver
+- **Tipos Soportados**: reCAPTCHA v2/v3, hCaptcha
+- **Almacenamiento Seguro**: Claves API almacenadas de forma segura vía keyring
 
-## 📋 Requirements
+### Configuración de Sesión
+- **Ajustes de Comportamiento**: Configura retrasos de acción, tiempos de visualización y acciones habilitadas
+- **Sesiones Persistentes**: Guarda cookies y estado del navegador entre ejecuciones
+- **Rutinas Personalizadas**: Define rutinas de automatización predefinidas (YAML/JSON)
+- **Monitoreo de Recursos**: Visualización en tiempo real de uso de CPU y RAM
+- **Lógica de Reintentos**: Reintentos configurables con retroceso exponencial (Fase 2)
+- **Registro Avanzado**: Archivos de registro rotativos por sesión (Fase 2)
 
-- Python 3.11 or higher
-- Windows 11 / macOS / Linux
-- 16GB RAM recommended (minimum 8GB)
-- Ollama (for LLM integration)
+## 📋 Requisitos
 
-## 🛠️ Installation
+- Windows 10 o Windows 11
+- Python 3.11 o superior
+- 16GB de RAM recomendados (mínimo 8GB)
+- Ollama (para integración con LLM)
+
+## 🛠️ Instalación
 
 ### Windows
 
-1. Clone the repository:
-```bash
+1. Clona el repositorio:
+```cmd
 git clone https://github.com/yourusername/botsos.git
 cd botsos
 ```
 
-2. Run the installation script:
-```bash
+2. Ejecuta el script de instalación:
+```cmd
 install_deps.bat
 ```
 
-3. Install Ollama from [ollama.ai](https://ollama.ai) and pull a model:
-```bash
+3. Instala Ollama desde [ollama.ai](https://ollama.ai) y descarga un modelo:
+```cmd
 ollama pull llama3.1:8b
 ```
 
-### Linux/macOS
+## 🎮 Uso
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/botsos.git
-cd botsos
-```
+### Iniciando la Aplicación
 
-2. Run the installation script:
-```bash
-chmod +x install_deps.sh
-./install_deps.sh
-```
-
-3. Install Ollama and pull a model:
-```bash
-curl -fsSL https://ollama.ai/install.sh | sh
-ollama pull llama3.1:8b
-```
-
-## 🎮 Usage
-
-### Starting the Application
-
-```bash
-# Activate virtual environment
-# Windows:
+```cmd
+REM Activar entorno virtual
 venv\Scripts\activate
 
-# Linux/macOS:
-source venv/bin/activate
-
-# Run the application
+REM Ejecutar la aplicación
 python main.py
 ```
 
-### Creating a Session
+### Creando una Sesión
 
-1. Click "➕ Add Session" in the sidebar
-2. Configure the session in the tabs:
-   - **Behaviors**: Set LLM model, timing, and enabled actions
-   - **Proxy/IP**: Configure proxy settings if needed
-   - **Fingerprint**: Choose device preset and spoofing options
-   - **Advanced Spoof**: Configure TLS, WebGPU, and canvas noise (Phase 2)
-   - **Behavior Sim**: Set mouse jitter, typing speed, and idle times (Phase 2)
-   - **CAPTCHA**: Enable automatic CAPTCHA solving (Phase 2)
-3. Click "💾 Save Configuration"
-4. Click "▶️ Start Selected" to run the session
+1. Haz clic en "➕ Agregar Sesión" en la barra lateral
+2. Configura la sesión en las pestañas:
+   - **Comportamientos**: Configura modelo LLM, tiempos y acciones habilitadas
+   - **Proxy/IP**: Configura ajustes de proxy si es necesario
+   - **Huella Digital**: Elige preset de dispositivo y opciones de suplantación
+   - **Suplantación Avanzada**: Configura TLS, WebGPU y ruido de canvas (Fase 2)
+   - **Simulación de Comportamiento**: Configura movimiento del ratón, velocidad de escritura y tiempos (Fase 2)
+   - **CAPTCHA**: Habilita resolución automática de CAPTCHA (Fase 2)
+3. Haz clic en "💾 Guardar Configuración"
+4. Haz clic en "▶️ Iniciar Seleccionada" para ejecutar la sesión
 
-### Using Predefined Routines
+### Usando Rutinas Predefinidas
 
-Edit the `config/rutinas.json` file to define automation routines:
+Edita el archivo `config/rutinas.json` para definir rutinas de automatización:
 
 ```json
 {
   "rutinas": {
-    "my_routine": {
-      "id": "my_routine",
-      "nombre": "My Custom Routine",
-      "descripcion": "Description of what this routine does",
+    "mi_rutina": {
+      "id": "mi_rutina",
+      "nombre": "Mi Rutina Personalizada",
+      "descripcion": "Descripción de lo que hace esta rutina",
       "acciones": ["buscar", "reproducir", "like"],
       "parametros": {
-        "query": "search term",
+        "query": "término de búsqueda",
         "tiempo_reproduccion_sec": 60
       }
     }
@@ -156,65 +135,62 @@ Edit the `config/rutinas.json` file to define automation routines:
 }
 ```
 
-## 📁 Project Structure
+## 📁 Estructura del Proyecto
 
 ```
 botsos/
-├── main.py                 # Application entry point
-├── requirements.txt        # Python dependencies
-├── install_deps.bat        # Windows installation script
-├── install_deps.sh         # Linux/macOS installation script
+├── main.py                 # Punto de entrada de la aplicación
+├── requirements.txt        # Dependencias de Python
+├── install_deps.bat        # Script de instalación para Windows
 ├── config/
-│   ├── devices.json        # Device fingerprint presets
-│   ├── default_config.json # Default session settings
-│   └── rutinas.json        # Predefined automation routines
+│   ├── devices.json        # Presets de huella digital de dispositivos
+│   ├── default_config.json # Configuración por defecto de sesiones
+│   └── rutinas.json        # Rutinas de automatización predefinidas
 ├── src/
 │   ├── __init__.py
-│   ├── session_manager_gui.py  # Main GUI application
-│   ├── session_config.py       # Session configuration model
-│   ├── proxy_manager.py        # Proxy pool management
-│   ├── fingerprint_manager.py  # Device fingerprint handling
-│   ├── browser_session.py      # Browser automation logic
-│   └── advanced_features.py    # Phase 2 advanced features
-├── data/                   # Persistent data storage
-├── logs/                   # Application logs
-└── browser_context/        # Browser session data
+│   ├── session_manager_gui.py  # Aplicación GUI principal
+│   ├── session_config.py       # Modelo de configuración de sesión
+│   ├── proxy_manager.py        # Gestión de pool de proxies
+│   ├── fingerprint_manager.py  # Manejo de huellas digitales
+│   ├── browser_session.py      # Lógica de automatización del navegador
+│   └── advanced_features.py    # Características avanzadas de Fase 2/3
+├── data/                   # Almacenamiento de datos persistentes
+├── logs/                   # Registros de la aplicación
+└── browser_context/        # Datos de sesión del navegador
 ```
 
-## ⚙️ Configuration
+## ⚙️ Configuración
 
-### Device Presets (config/devices.json)
+### Presets de Dispositivo (config/devices.json)
 
-Customize device fingerprints with different profiles:
+Personaliza huellas digitales de dispositivo con diferentes perfiles:
 - Windows Desktop
-- macOS Laptop
 - Android Mobile
-- Linux Server
 
-### Default Settings (config/default_config.json)
+### Configuración por Defecto (config/default_config.json)
 
-Configure default values for:
-- Session behavior
-- Proxy settings
-- Fingerprint options
-- Resource limits
-- Logging
+Configura valores por defecto para:
+- Comportamiento de sesión
+- Configuración de proxy
+- Opciones de huella digital
+- Límites de recursos
+- Registro
 
-## ⚠️ Disclaimer
+## ⚠️ Aviso Legal
 
-This tool is intended for educational and testing purposes only. Please ensure you comply with the terms of service of any websites you interact with. The developers are not responsible for any misuse of this software.
+Esta herramienta está destinada únicamente para propósitos educativos y de prueba. Por favor asegúrate de cumplir con los términos de servicio de cualquier sitio web con el que interactúes. Los desarrolladores no son responsables por cualquier uso indebido de este software.
 
-## 🤝 Contributing
+## 🤝 Contribuciones
 
-Contributions are welcome! Please feel free to submit issues and pull requests.
+¡Las contribuciones son bienvenidas! Por favor siéntete libre de enviar issues y pull requests.
 
-## 📄 License
+## 📄 Licencia
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
 
-## 🙏 Acknowledgments
+## 🙏 Agradecimientos
 
-- [Playwright](https://playwright.dev/) - Browser automation framework
-- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) - GUI framework
-- [Ollama](https://ollama.ai/) - Local LLM runtime
-- [2Captcha](https://2captcha.com/) - CAPTCHA solving service
+- [Playwright](https://playwright.dev/) - Framework de automatización de navegador
+- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) - Framework de GUI
+- [Ollama](https://ollama.ai/) - Runtime de LLM local
+- [2Captcha](https://2captcha.com/) - Servicio de resolución de CAPTCHA

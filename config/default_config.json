@@ -21,7 +21,9 @@
       "Muy buen contenido, sigue así.",
       "Interesante información, gracias.",
       "Me encantó este video.",
-      "Contenido de calidad como siempre."
+      "Contenido de calidad como siempre.",
+      "¡Muy buena explicación!",
+      "Increíble contenido, felicidades."
     ]
   },
   "proxy_defaults": {
@@ -48,5 +50,9 @@
     "max_ram_usage_percent": 80,
     "max_cpu_usage_percent": 85,
     "session_timeout_min": 60
+  },
+  "platform": {
+    "supported": ["Windows"],
+    "required_os_version": "Windows 10+"
   }
 }
