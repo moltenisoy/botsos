@@ -348,9 +348,24 @@ class OpenVPNProvider(VPNProviderBase):
     def _is_process_running(self) -> bool:
         """Verifica si el proceso VPN sigue ejecutándose."""
         if self._process is None or self._process.poll() is not None:
-            if self._process:
-                stderr = self._process.stderr.read().decode() if self._process.stderr else ""
-                self._report_error(f"OpenVPN terminó inesperadamente: {stderr}")
+            if self._process and self._process.stderr:
+                # Leer stderr de forma segura con readline para evitar bloqueos
+                try:
+                    stderr_lines = []
+                    while True:
+                        line = self._process.stderr.readline()
+                        if not line:
+                            break
+                        stderr_lines.append(line.decode() if isinstance(line, bytes) else line)
+                        if len(stderr_lines) > 20:  # Limitar a 20 líneas
+                            break
+                    stderr = ''.join(stderr_lines)
+                    if stderr:
+                        self._report_error(f"OpenVPN terminó inesperadamente: {stderr}")
+                except Exception:
+                    self._report_error("OpenVPN terminó inesperadamente")
+            elif self._process:
+                self._report_error("OpenVPN terminó inesperadamente")
             return False
         return True
 
@@ -394,14 +409,29 @@ class OpenVPNProvider(VPNProviderBase):
     def _create_auth_file(self) -> Optional[str]:
         """Crea archivo temporal con credenciales."""
         import tempfile
+        import stat
         try:
             fd, path = tempfile.mkstemp(prefix="ovpn_auth_", suffix=".txt")
+            # Establecer permisos restrictivos (solo lectura para el propietario)
+            os.fchmod(fd, stat.S_IRUSR | stat.S_IWUSR)
             with os.fdopen(fd, 'w') as f:
                 f.write(f"{self.config.username}\n{self.config.password}\n")
+            # Almacenar para limpieza posterior
+            self._auth_file_path = path
             return path
         except Exception as e:
             logger.error(f"Error creando archivo de autenticación: {e}")
             return None
+
+    def _cleanup_auth_file(self):
+        """Limpia el archivo de autenticación temporal."""
+        if hasattr(self, '_auth_file_path') and self._auth_file_path:
+            try:
+                if os.path.exists(self._auth_file_path):
+                    os.unlink(self._auth_file_path)
+                self._auth_file_path = None
+            except Exception as e:
+                logger.warning(f"Error limpiando archivo de autenticación: {e}")
 
     async def disconnect(self) -> bool:
         """Desconecta OpenVPN."""
@@ -414,6 +444,9 @@ class OpenVPNProvider(VPNProviderBase):
                 self._process = None
             except Exception as e:
                 logger.error(f"Error al terminar proceso OpenVPN: {e}")
+
+        # Limpiar archivo de autenticación
+        self._cleanup_auth_file()
 
         self._update_status(ConnectionStatus.DISCONNECTED)
         self.state.connected_since = None
@@ -466,6 +499,7 @@ class WireGuardProvider(VPNProviderBase):
     def _generate_config_file(self) -> Optional[str]:
         """Genera archivo de configuración WireGuard."""
         import tempfile
+        import stat
 
         config_content = f"""[Interface]
 PrivateKey = {self.config.wg_private_key}
@@ -485,6 +519,8 @@ PersistentKeepalive = {self.config.wg_persistent_keepalive}
 
         try:
             fd, path = tempfile.mkstemp(prefix="wg_", suffix=".conf")
+            # Establecer permisos restrictivos para proteger claves privadas
+            os.fchmod(fd, stat.S_IRUSR | stat.S_IWUSR)
             with os.fdopen(fd, 'w') as f:
                 f.write(config_content)
             return path
@@ -586,6 +622,7 @@ class TorBridgeProvider:
             return False
 
         self.state.status = ConnectionStatus.CONNECTING
+        torrc_path = None
 
         try:
             # Generar torrc temporal
@@ -605,6 +642,9 @@ ControlPort {self.config.tor_control_port}
             with os.fdopen(fd, 'w') as f:
                 f.write(torrc_content)
 
+            # Almacenar para limpieza posterior
+            self._torrc_path = torrc_path
+
             self._process = subprocess.Popen(
                 ["tor", "-f", torrc_path],
                 stdout=subprocess.PIPE,
@@ -622,12 +662,24 @@ ControlPort {self.config.tor_control_port}
                 self.state.status = ConnectionStatus.ERROR
                 stderr = self._process.stderr.read().decode() if self._process.stderr else ""
                 self.state.last_error = f"Tor terminó: {stderr}"
+                self._cleanup_torrc()
                 return False
 
         except Exception as e:
             self.state.status = ConnectionStatus.ERROR
             self.state.last_error = str(e)
+            self._cleanup_torrc()
             return False
+
+    def _cleanup_torrc(self):
+        """Limpia el archivo torrc temporal."""
+        if hasattr(self, '_torrc_path') and self._torrc_path:
+            try:
+                if os.path.exists(self._torrc_path):
+                    os.unlink(self._torrc_path)
+                self._torrc_path = None
+            except Exception as e:
+                logger.warning(f"Error limpiando archivo torrc: {e}")
 
     async def stop(self) -> bool:
         """Detiene el servicio Tor."""
@@ -640,6 +692,9 @@ ControlPort {self.config.tor_control_port}
                 self._process = None
             except Exception as e:
                 logger.error(f"Error deteniendo Tor: {e}")
+
+        # Limpiar archivo torrc
+        self._cleanup_torrc()
 
         self.state.status = ConnectionStatus.DISCONNECTED
         return True
