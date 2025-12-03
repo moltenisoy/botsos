@@ -28,6 +28,14 @@ from .phase5_tabs import (
     create_logging_tab
 )
 
+# VPN/Bridge tab - nueva funcionalidad
+try:
+    from .vpn_bridge_tab import VPNBridgeTab
+    VPN_BRIDGE_AVAILABLE = True
+except ImportError:
+    VPNBridgeTab = None
+    VPN_BRIDGE_AVAILABLE = False
+
 __all__ = [
     'create_behavior_tab',
     'create_proxy_tab',
@@ -44,5 +52,7 @@ __all__ = [
     'create_scheduling_tab',
     'create_analytics_tab',
     'create_accounts_tab',
-    'create_logging_tab'
+    'create_logging_tab',
+    'VPNBridgeTab',
+    'VPN_BRIDGE_AVAILABLE'
 ]

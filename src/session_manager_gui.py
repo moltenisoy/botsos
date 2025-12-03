@@ -61,6 +61,13 @@ try:
 except ImportError:
     ML_PROXY_AVAILABLE = False
 
+# VPN/Bridge Manager
+try:
+    from .gui.tabs.vpn_bridge_tab import VPNBridgeTab
+    VPN_BRIDGE_AVAILABLE = True
+except ImportError:
+    VPN_BRIDGE_AVAILABLE = False
+
 
 logger = logging.getLogger(__name__)
 
@@ -557,6 +564,12 @@ class SessionManagerGUI(QMainWindow):
         
         # Pestañas de configuración
         self.config_tabs = QTabWidget()
+        # Pestaña de VPN/Puentes (nueva funcionalidad principal)
+        if VPN_BRIDGE_AVAILABLE:
+            self.vpn_bridge_tab = VPNBridgeTab(self.data_dir, self)
+            self.vpn_bridge_tab.vpn_connected.connect(self._on_vpn_connected)
+            self.vpn_bridge_tab.vpn_disconnected.connect(self._on_vpn_disconnected)
+            self.config_tabs.addTab(self.vpn_bridge_tab, "🔐 VPN/Puentes")
         self.config_tabs.addTab(self._create_behavior_tab(), "🎮 Comportamientos")
         self.config_tabs.addTab(self._create_proxy_tab(), "🌐 Proxy/IP")
         self.config_tabs.addTab(self._create_fingerprint_tab(), "🖥️ Huella Digital")
@@ -2890,6 +2903,16 @@ Proxies:
         """Manejar finalización de sesión."""
         if session_id in self.workers:
             del self.workers[session_id]
+    
+    def _on_vpn_connected(self, config_id: str):
+        """Manejar conexión VPN establecida."""
+        self._on_log_message("VPN", f"✅ Conexión VPN establecida: {config_id}")
+        self.status_bar.showMessage("VPN conectado")
+    
+    def _on_vpn_disconnected(self):
+        """Manejar desconexión VPN."""
+        self._on_log_message("VPN", "VPN desconectado")
+        self.status_bar.showMessage("VPN desconectado")
     
     def _add_proxy_to_pool(self):
         """Agregar un proxy al pool."""
