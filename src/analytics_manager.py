@@ -1,14 +1,14 @@
 """
-Módulo de Analíticas y Métricas
+Módulo de Analíticas y Métricas.
 
 Maneja la recopilación de métricas y dashboard de analíticas
 usando Prometheus para monitoreo en tiempo real.
 
 Implementa características de fase5.txt:
-- Integración con Prometheus para métricas
-- Dashboard de métricas de sesiones
-- Seguimiento de tasas de éxito, bloqueos y rendimiento
-- Selección de proxy basada en ML
+- Integración con Prometheus para métricas.
+- Dashboard de métricas de sesiones.
+- Seguimiento de tasas de éxito, bloqueos y rendimiento.
+- Selección de proxy basada en ML.
 
 Diseñado exclusivamente para Windows.
 """

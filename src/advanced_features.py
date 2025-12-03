@@ -1,17 +1,17 @@
 """
-Módulo de Características Avanzadas
+Módulo de Características Avanzadas.
 
 Maneja características avanzadas de anti-detección incluyendo:
-- Integración de resolución de CAPTCHA
-- Suplantación avanzada de huella digital (TLS, WebGPU, Audio)
-- Simulación de comportamiento (movimiento del ratón, retrasos, desplazamiento)
-- Validación de proxies
-- Almacenamiento seguro de credenciales
-- Mecanismos de reintento
-- Planificación de contingencia y recuperación (fase3.txt)
-- Ocultación del sistema y bloqueo de puertos (fase3.txt)
-- Detección de anomalías (fase3.txt)
-- Huella digital polimórfica (fase3.txt)
+- Integración de resolución de CAPTCHA.
+- Suplantación avanzada de huella digital (TLS, WebGPU, Audio).
+- Simulación de comportamiento (movimiento del ratón, retrasos, desplazamiento).
+- Validación de proxies.
+- Almacenamiento seguro de credenciales.
+- Mecanismos de reintento.
+- Planificación de contingencia y recuperación (fase3.txt).
+- Ocultación del sistema y bloqueo de puertos (fase3.txt).
+- Detección de anomalías (fase3.txt).
+- Huella digital polimórfica (fase3.txt).
 
 Diseñado exclusivamente para Windows.
 """
@@ -632,10 +632,10 @@ class SecureCredentialStore:
         """Obtener una credencial.
         
         Args:
-            key: Credential key/name.
+            key: Clave/nombre de la credencial.
             
         Returns:
-            Credential value or None if not found.
+            Valor de la credencial o None si no se encuentra.
         """
         if self._keyring_available:
             try:
@@ -644,19 +644,19 @@ class SecureCredentialStore:
                 if value:
                     return value
             except Exception as e:
-                logger.error(f"Failed to retrieve credential from keyring: {e}")
+                logger.error(f"Error al obtener credencial de keyring: {e}")
         
-        # Fallback: check environment variable
+        # Fallback: verificar variable de entorno
         return os.environ.get(f"BOTSOS_{key.upper()}")
     
     def delete_credential(self, key: str) -> bool:
-        """Delete a credential.
+        """Eliminar una credencial.
         
         Args:
-            key: Credential key/name.
+            key: Clave/nombre de la credencial.
             
         Returns:
-            True if deleted successfully, False otherwise.
+            True si se eliminó exitosamente, False de lo contrario.
         """
         if self._keyring_available:
             try:
@@ -664,9 +664,9 @@ class SecureCredentialStore:
                 keyring.delete_password(self.SERVICE_NAME, key)
                 return True
             except Exception as e:
-                logger.error(f"Failed to delete credential from keyring: {e}")
+                logger.error(f"Error al eliminar credencial de keyring: {e}")
         
-        # Fallback: remove from environment
+        # Fallback: eliminar de variable de entorno
         env_key = f"BOTSOS_{key.upper()}"
         if env_key in os.environ:
             del os.environ[env_key]
@@ -890,8 +890,6 @@ class AdvancedLogging:
         Returns:
             Number of files deleted.
         """
-        import time
-        
         deleted = 0
         cutoff_time = time.time() - (max_age_days * 24 * 60 * 60)
         

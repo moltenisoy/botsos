@@ -1,14 +1,14 @@
 """
-Módulo de Programación de Tareas
+Módulo de Programación de Tareas.
 
 Maneja la programación de sesiones usando APScheduler
 para automatización basada en tiempo.
 
 Implementa características de fase5.txt:
-- Programación con expresiones cron
-- Cola de sesiones pendientes
-- Ventanas de tiempo de ejecución
-- Reinicio automático de sesiones fallidas
+- Programación con expresiones cron.
+- Cola de sesiones pendientes.
+- Ventanas de tiempo de ejecución.
+- Reinicio automático de sesiones fallidas.
 
 Diseñado exclusivamente para Windows.
 """

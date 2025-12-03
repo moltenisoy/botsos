@@ -1,5 +1,5 @@
 """
-Módulo de Sesión del Navegador
+Módulo de Sesión del Navegador.
 
 Maneja la automatización del navegador usando Playwright con medidas anti-detección.
 Diseñado para Windows.

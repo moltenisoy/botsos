@@ -1,5 +1,5 @@
 """
-Módulo Administrador de Huellas Digitales
+Módulo Administrador de Huellas Digitales.
 
 Maneja la generación, aleatorización y aplicación de huellas digitales de dispositivo.
 Diseñado para Windows.

@@ -1,13 +1,13 @@
 """
-Módulo de Gestión de Escalabilidad
+Módulo de Gestión de Escalabilidad.
 
 Maneja la escalabilidad del sistema usando Docker y AWS para operaciones
 a gran escala (50+ sesiones).
 
 Implementa características de fase5.txt:
-- Contenedorización con Docker para entornos aislados
-- Integración con AWS EC2 para descarga de sesiones pesadas
-- Auto-escalado basado en umbrales de CPU/RAM
+- Contenedorización con Docker para entornos aislados.
+- Integración con AWS EC2 para descarga de sesiones pesadas.
+- Auto-escalado basado en umbrales de CPU/RAM.
 
 Diseñado exclusivamente para Windows.
 """

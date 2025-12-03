@@ -1,16 +1,16 @@
 """
-Módulo de Gestión de Windows
+Módulo de Gestión de Windows.
 
 Maneja problemas específicos de Windows incluyendo:
-- Verificación y elevación UAC
-- Detección de Docker Desktop
-- Fallback a WSL2 si Docker nativo falla
-- Detección de hardware (AMD/ROCm)
+- Verificación y elevación UAC.
+- Detección de Docker Desktop.
+- Fallback a WSL2 si Docker nativo falla.
+- Detección de hardware (AMD/ROCm).
 
 Implementa características de fase6.txt:
-- Verificaciones UAC para Docker/ROCm
-- Fallback a WSL2 si nativo falla
-- Pruebas en hardware Ryzen 3
+- Verificaciones UAC para Docker/ROCm.
+- Fallback a WSL2 si nativo falla.
+- Pruebas en hardware Ryzen 3.
 
 Diseñado exclusivamente para Windows.
 """

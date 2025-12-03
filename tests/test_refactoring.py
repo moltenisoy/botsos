@@ -2,10 +2,10 @@
 Tests para los nuevos módulos de validación y resiliencia.
 
 Prueba las funcionalidades añadidas para:
-- Validación de entrada
-- Circuit Breaker
-- Cache con TTL
-- Repository Pattern
+- Validación de entrada.
+- Circuit Breaker.
+- Cache con TTL.
+- Repository Pattern.
 """
 
 import pytest
