@@ -137,7 +137,10 @@ class BrowserSession:
             return True
             
         except ImportError:
-            logger.error("Playwright is not installed. Run: pip install playwright && playwright install")
+            logger.error(
+                "Playwright is not installed. Install with: "
+                "pip install playwright && playwright install chromium"
+            )
             return False
         except Exception as e:
             logger.error(f"Failed to start browser session: {e}")
@@ -263,9 +266,20 @@ class BrowserSession:
             if element:
                 await element.click()
                 
-                # Type with random delays between characters
-                for char in text:
-                    await self.page.keyboard.type(char, delay=random.randint(50, 150))
+                # Type with human-like delays
+                # For performance, use batch delays instead of per-character
+                if len(text) <= 10:
+                    # Short text: type character by character
+                    for char in text:
+                        await self.page.keyboard.type(char, delay=random.randint(50, 150))
+                else:
+                    # Longer text: type in small chunks with delays between chunks
+                    chunk_size = 5
+                    for i in range(0, len(text), chunk_size):
+                        chunk = text[i:i + chunk_size]
+                        await self.page.keyboard.type(chunk, delay=random.randint(30, 80))
+                        if i + chunk_size < len(text):
+                            await asyncio.sleep(random.uniform(0.05, 0.15))
                 
                 self._action_count += 1
                 logger.debug(f"Typed text in: {selector}")

@@ -8,8 +8,15 @@ multiple LLM-powered browser automation sessions.
 import sys
 import json
 import logging
+import time
 from pathlib import Path
 from typing import Dict, Optional
+
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -53,7 +60,6 @@ class SessionWorker(QThread):
             self.log_message.emit(session_id, "Session execution placeholder - implement browser automation")
             
             # Simulate session running
-            import time
             while self._is_running:
                 time.sleep(1)
                 
@@ -1009,8 +1015,12 @@ class SessionManagerGUI(QMainWindow):
     
     def _update_resource_usage(self):
         """Update resource usage display."""
+        if not PSUTIL_AVAILABLE:
+            self.cpu_label.setText("CPU: N/A")
+            self.ram_label.setText("RAM: N/A")
+            return
+        
         try:
-            import psutil
             cpu = psutil.cpu_percent()
             ram = psutil.virtual_memory().percent
             
@@ -1035,8 +1045,8 @@ class SessionManagerGUI(QMainWindow):
             else:
                 self.ram_bar.setStyleSheet("QProgressBar::chunk { background-color: #16825d; }")
                 
-        except ImportError:
-            # psutil not available
+        except Exception:
+            # Error getting resource usage
             self.cpu_label.setText("CPU: N/A")
             self.ram_label.setText("RAM: N/A")
     
