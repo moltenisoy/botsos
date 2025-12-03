@@ -80,6 +80,15 @@ from .plugin_system import PluginManager, EvasionPlugin, RLFeedbackLoop
 from .help_system import HelpSystem, TooltipManager, TutorialWizard, EthicalConsentManager
 from .packaging_manager import PackagingManager, BuildConfig, VersionManager
 
+# Módulos de infraestructura (mejoras de validación y refactorización)
+from .infrastructure import (
+    retry, retry_sync,
+    GracefulShutdown, get_shutdown_manager,
+    browser_context, browser_page_context, aiohttp_session_context,
+    ConnectionPool,
+    Dependencies, DependencyProvider
+)
+
 __all__ = [
     # Configuración
     "SessionConfig",
@@ -148,4 +157,16 @@ __all__ = [
     "PackagingManager",
     "BuildConfig",
     "VersionManager",
+    
+    # Infraestructura (mejoras de validación y refactorización)
+    "retry",
+    "retry_sync",
+    "GracefulShutdown",
+    "get_shutdown_manager",
+    "browser_context",
+    "browser_page_context",
+    "aiohttp_session_context",
+    "ConnectionPool",
+    "Dependencies",
+    "DependencyProvider",
 ]
