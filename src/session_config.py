@@ -187,6 +187,183 @@ class MfaConfig:
     show_ethical_warning: bool = True
 
 
+# ===========================================
+# FASE 5 - Configuraciones de Escalabilidad y Características Avanzadas
+# ===========================================
+
+
+@dataclass
+class ScalingConfig:
+    """Configuración de escalabilidad y cloud (de fase5.txt).
+    
+    Permite escalar a 50+ sesiones usando Docker y AWS.
+    Diseñado exclusivamente para Windows.
+    """
+    # Docker
+    docker_enabled: bool = False
+    docker_image: str = "botsos:latest"
+    docker_volume_mounts: List[str] = field(default_factory=list)
+    docker_network_mode: str = "bridge"
+    
+    # AWS Cloud
+    aws_enabled: bool = False
+    aws_region: str = "us-east-1"
+    aws_instance_type: str = "t3.medium"
+    aws_ami_id: str = ""  # ID de AMI de Windows
+    
+    # Auto-escalado
+    auto_scale_enabled: bool = False
+    ram_threshold_percent: int = 85  # Migrar a cloud si RAM > 85%
+    cpu_threshold_percent: int = 80  # Migrar a cloud si CPU > 80%
+    max_local_sessions: int = 6  # Máximo de sesiones locales antes de escalar
+    max_cloud_sessions: int = 50  # Máximo de sesiones en cloud
+
+
+@dataclass
+class PerformanceConfig:
+    """Configuración de rendimiento (de fase5.txt).
+    
+    Optimiza el uso de GPU y procesamiento async.
+    """
+    # Aceleración GPU
+    gpu_acceleration_enabled: bool = False
+    gpu_backend: str = "auto"  # auto, rocm, directml (para AMD/Windows)
+    
+    # Procesamiento Async
+    async_batch_size: int = 4  # Sesiones por lote async (4-10)
+    event_loop_policy: str = "default"  # default, uvloop (solo Linux)
+    
+    # Caché de LLM
+    llm_cache_enabled: bool = True
+    llm_cache_max_size: int = 1000  # Máximo de respuestas cacheadas
+    
+    # Optimización de memoria
+    memory_optimization_enabled: bool = True
+    gc_interval_sec: int = 60  # Intervalo de garbage collection
+
+
+@dataclass
+class MLEvasionConfig:
+    """Configuración de evasión con ML/RL (de fase5.txt).
+    
+    Usa aprendizaje automático para adaptar comportamientos
+    y evitar detección.
+    """
+    # Modelo RL
+    rl_enabled: bool = False
+    rl_model_type: str = "simple_qlearning"  # simple_qlearning, dqn
+    rl_learning_rate: float = 0.01
+    rl_discount_factor: float = 0.95
+    
+    # Adaptación de comportamiento
+    adaptive_jitter_enabled: bool = True
+    adaptive_delay_enabled: bool = True
+    feedback_loop_enabled: bool = True
+    
+    # Suplantación biométrica
+    biometric_spoof_enabled: bool = False
+    eye_track_simulation: bool = False  # Simula enfoque visual aleatorio
+    
+    # Variación de patrones
+    pattern_variation_enabled: bool = True
+    pattern_variation_level: float = 0.2  # 20% de variación
+
+
+@dataclass
+class SchedulingConfig:
+    """Configuración de programación de tareas (de fase5.txt).
+    
+    Usa APScheduler para programar sesiones.
+    """
+    # Programación
+    scheduling_enabled: bool = False
+    cron_expression: str = ""  # Expresión cron (ej: "0 * * * *" = cada hora)
+    
+    # Cola de sesiones
+    session_queue_enabled: bool = True
+    max_queue_size: int = 100
+    
+    # Ejecución programada
+    start_time: str = ""  # Hora de inicio (HH:MM)
+    end_time: str = ""  # Hora de fin (HH:MM)
+    days_of_week: List[str] = field(default_factory=lambda: [
+        "lunes", "martes", "miércoles", "jueves", "viernes"
+    ])
+    
+    # Reinicio automático
+    auto_restart_enabled: bool = True
+    restart_delay_sec: int = 60
+
+
+@dataclass
+class AnalyticsConfig:
+    """Configuración de analíticas y métricas (de fase5.txt).
+    
+    Usa Prometheus para recopilar métricas.
+    """
+    # Prometheus
+    prometheus_enabled: bool = False
+    prometheus_port: int = 9090
+    metrics_endpoint: str = "/metrics"
+    
+    # Métricas
+    track_success_rate: bool = True
+    track_ban_count: bool = True
+    track_session_duration: bool = True
+    track_proxy_performance: bool = True
+    
+    # Dashboard
+    dashboard_enabled: bool = False
+    dashboard_refresh_sec: int = 30
+    
+    # Exportación
+    export_csv_enabled: bool = False
+    export_interval_min: int = 60
+
+
+@dataclass
+class AccountManagementConfig:
+    """Configuración de gestión de cuentas (de fase5.txt).
+    
+    Permite importar/exportar cuentas desde CSV encriptado.
+    """
+    # Gestión de cuentas
+    accounts_enabled: bool = False
+    accounts_file: str = "accounts.csv.enc"
+    
+    # Encriptación
+    encryption_enabled: bool = True
+    # La clave se almacena de forma segura vía keyring
+    
+    # Rotación de cuentas
+    account_rotation_enabled: bool = True
+    account_per_session: bool = True  # Una cuenta por sesión
+
+
+@dataclass
+class MLProxyConfig:
+    """Configuración de selección de proxy con ML (de fase5.txt).
+    
+    Usa ML para predecir el mejor proxy basado en historial.
+    """
+    # Selección ML
+    ml_selection_enabled: bool = False
+    model_type: str = "random_forest"  # random_forest, gradient_boosting
+    
+    # Entrenamiento
+    train_on_history: bool = True
+    min_history_samples: int = 100
+    retrain_interval_hours: int = 24
+    
+    # Características para predicción
+    features: List[str] = field(default_factory=lambda: [
+        "latency", "success_rate", "country", "type", "last_used_hours"
+    ])
+    
+    # Fallback
+    fallback_strategy: str = "best_performance"  # Si ML falla
+
+
 @dataclass
 class SessionConfig:
     """Complete configuration for a single session."""
@@ -208,6 +385,15 @@ class SessionConfig:
     advanced_behavior: AdvancedBehaviorConfig = field(default_factory=AdvancedBehaviorConfig)
     system_hiding: SystemHidingConfig = field(default_factory=SystemHidingConfig)
     mfa: MfaConfig = field(default_factory=MfaConfig)
+    
+    # Phase 5 configurations (de fase5.txt)
+    scaling: ScalingConfig = field(default_factory=ScalingConfig)
+    performance: PerformanceConfig = field(default_factory=PerformanceConfig)
+    ml_evasion: MLEvasionConfig = field(default_factory=MLEvasionConfig)
+    scheduling: SchedulingConfig = field(default_factory=SchedulingConfig)
+    analytics: AnalyticsConfig = field(default_factory=AnalyticsConfig)
+    account_management: AccountManagementConfig = field(default_factory=AccountManagementConfig)
+    ml_proxy: MLProxyConfig = field(default_factory=MLProxyConfig)
     
     # Retry settings (from fase2.txt - second block)
     max_retries: int = 3
@@ -236,6 +422,15 @@ class SessionConfig:
         system_hiding_data = data.pop('system_hiding', {})
         mfa_data = data.pop('mfa', {})
         
+        # Phase 5 configurations
+        scaling_data = data.pop('scaling', {})
+        performance_data = data.pop('performance', {})
+        ml_evasion_data = data.pop('ml_evasion', {})
+        scheduling_data = data.pop('scheduling', {})
+        analytics_data = data.pop('analytics', {})
+        account_management_data = data.pop('account_management', {})
+        ml_proxy_data = data.pop('ml_proxy', {})
+        
         # Filter out unknown fields from nested configs to handle version changes
         behavior_fields = set(BehaviorConfig.__dataclass_fields__.keys())
         proxy_fields = set(ProxyConfig.__dataclass_fields__.keys())
@@ -246,6 +441,15 @@ class SessionConfig:
         system_hiding_fields = set(SystemHidingConfig.__dataclass_fields__.keys())
         mfa_fields = set(MfaConfig.__dataclass_fields__.keys())
         
+        # Phase 5 fields
+        scaling_fields = set(ScalingConfig.__dataclass_fields__.keys())
+        performance_fields = set(PerformanceConfig.__dataclass_fields__.keys())
+        ml_evasion_fields = set(MLEvasionConfig.__dataclass_fields__.keys())
+        scheduling_fields = set(SchedulingConfig.__dataclass_fields__.keys())
+        analytics_fields = set(AnalyticsConfig.__dataclass_fields__.keys())
+        account_management_fields = set(AccountManagementConfig.__dataclass_fields__.keys())
+        ml_proxy_fields = set(MLProxyConfig.__dataclass_fields__.keys())
+        
         return cls(
             behavior=BehaviorConfig(**{k: v for k, v in behavior_data.items() if k in behavior_fields}),
             proxy=ProxyConfig(**{k: v for k, v in proxy_data.items() if k in proxy_fields}),
@@ -255,6 +459,14 @@ class SessionConfig:
             advanced_behavior=AdvancedBehaviorConfig(**{k: v for k, v in advanced_behavior_data.items() if k in advanced_behavior_fields}),
             system_hiding=SystemHidingConfig(**{k: v for k, v in system_hiding_data.items() if k in system_hiding_fields}),
             mfa=MfaConfig(**{k: v for k, v in mfa_data.items() if k in mfa_fields}),
+            # Phase 5
+            scaling=ScalingConfig(**{k: v for k, v in scaling_data.items() if k in scaling_fields}),
+            performance=PerformanceConfig(**{k: v for k, v in performance_data.items() if k in performance_fields}),
+            ml_evasion=MLEvasionConfig(**{k: v for k, v in ml_evasion_data.items() if k in ml_evasion_fields}),
+            scheduling=SchedulingConfig(**{k: v for k, v in scheduling_data.items() if k in scheduling_fields}),
+            analytics=AnalyticsConfig(**{k: v for k, v in analytics_data.items() if k in analytics_fields}),
+            account_management=AccountManagementConfig(**{k: v for k, v in account_management_data.items() if k in account_management_fields}),
+            ml_proxy=MLProxyConfig(**{k: v for k, v in ml_proxy_data.items() if k in ml_proxy_fields}),
             **{k: v for k, v in data.items() if k not in ('status',) and k in cls.__dataclass_fields__}
         )
     
