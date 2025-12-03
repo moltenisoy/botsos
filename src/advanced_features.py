@@ -8,6 +8,10 @@ Handles advanced anti-detection features including:
 - Proxy validation
 - Secure credential storage
 - Retry mechanisms
+- Contingency planning and recovery (fase3.txt)
+- System hiding and port blocking (fase3.txt)
+- Anomaly detection (fase3.txt)
+- Polymorphic fingerprinting (fase3.txt)
 """
 
 import asyncio
@@ -17,7 +21,7 @@ import os
 import time
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any, Callable
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -941,7 +945,6 @@ class ContingencyState:
     
     def start_cool_down(self, duration_sec: int):
         """Start a cool-down period."""
-        from datetime import timedelta
         self.cool_down_until = datetime.now() + timedelta(seconds=duration_sec)
 
 
@@ -1251,7 +1254,7 @@ class PolymorphicFingerprint:
         for field in numeric_fields:
             if field in fingerprint:
                 value = fingerprint[field]
-                variation = int(value * variation_level)
+                variation = max(1, int(value * variation_level))  # Minimum variation of 1
                 fingerprint[field] = value + random.randint(-variation, variation)
         
         # Vary canvas noise level
@@ -1302,7 +1305,3 @@ class PolymorphicFingerprint:
     def reset_to_base(self):
         """Reset to base fingerprint."""
         self.current = self.base.copy()
-
-
-# Import timedelta for AnomalyDetector
-from datetime import timedelta
