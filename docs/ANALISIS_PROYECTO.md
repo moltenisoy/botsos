@@ -247,15 +247,17 @@ class JsonSessionRepository(SessionRepository):
 ```python
 # Actual: Validación manual dispersa
 # Propuesto:
-from pydantic import BaseModel, validator, Field
+from typing import Literal
+from pydantic import BaseModel, field_validator, Field
 
 class ProxyConfigInput(BaseModel):
     server: str = Field(..., min_length=1)
     port: int = Field(..., ge=1, le=65535)
     proxy_type: Literal["http", "https", "socks5"] = "http"
     
-    @validator('server')
-    def validate_server(cls, v):
+    @field_validator('server')
+    @classmethod
+    def validate_server(cls, v: str) -> str:
         # Validar formato de servidor
         return v.strip()
 ```
@@ -373,7 +375,7 @@ async def make_request(self, url: str):
 ### 10. **Implementar cache con TTL**
 ```python
 from cachetools import TTLCache
-from functools import lru_cache
+import hashlib
 
 class CachedLLMClient:
     def __init__(self, max_size: int = 100, ttl: int = 3600):
