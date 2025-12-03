@@ -1,7 +1,8 @@
 """
-Session Configuration Module
+Módulo de Configuración de Sesión
 
-Handles session configuration data model and persistence.
+Maneja el modelo de datos de configuración de sesión y persistencia.
+Diseñado para Windows.
 """
 
 import json

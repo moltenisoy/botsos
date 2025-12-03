@@ -1,13 +1,14 @@
 """
-Proxy Manager Module
+Módulo Administrador de Proxies
 
-Handles proxy pool management, rotation, and validation.
+Maneja la gestión del pool de proxies, rotación y validación.
+Diseñado para Windows.
 """
 
 import json
 import random
 import logging
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from typing import List, Optional, Dict, Any
 from pathlib import Path
 from datetime import datetime

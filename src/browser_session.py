@@ -1,14 +1,15 @@
 """
-Browser Session Module
+Módulo de Sesión del Navegador
 
-Handles browser automation using Playwright with anti-detection measures.
+Maneja la automatización del navegador usando Playwright con medidas anti-detección.
+Diseñado para Windows.
 """
 
 import asyncio
 import logging
 import random
 import time
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class BrowserAction:
-    """Represents a browser action to execute."""
+    """Representa una acción del navegador a ejecutar."""
     action_type: str  # navigate, click, type, scroll, wait
     selector: Optional[str] = None
     value: Optional[str] = None

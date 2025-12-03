@@ -16,12 +16,10 @@ Implementa características de fase2.txt:
 """
 
 import sys
-import json
 import logging
-import time
 import asyncio
 from pathlib import Path
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 from logging.handlers import RotatingFileHandler
 
 try:
@@ -38,12 +36,9 @@ from PyQt6.QtWidgets import (
     QFileDialog, QProgressBar, QSlider
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QThreadPool, QRunnable, QObject
-from PyQt6.QtGui import QFont, QIcon, QColor
+from PyQt6.QtGui import QFont
 
-from .session_config import (
-    SessionConfig, SessionConfigManager, BehaviorConfig, CaptchaConfig,
-    ContingencyConfig, AdvancedBehaviorConfig, SystemHidingConfig, MfaConfig
-)
+from .session_config import SessionConfig, SessionConfigManager
 from .proxy_manager import ProxyManager, ProxyEntry
 from .fingerprint_manager import FingerprintManager
 
