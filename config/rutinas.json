@@ -1,0 +1,78 @@
+{
+  "rutinas": {
+    "rutina_buscar_reproducir": {
+      "id": "rutina_buscar_reproducir",
+      "nombre": "Buscar y Reproducir",
+      "descripcion": "Busca un video por término y lo reproduce durante un tiempo determinado",
+      "acciones": ["buscar", "reproducir", "skip_ad", "pausar"],
+      "parametros": {
+        "query": "",
+        "tiempo_reproduccion_sec": 60,
+        "skip_ads": true
+      }
+    },
+    "rutina_interaccion_completa": {
+      "id": "rutina_interaccion_completa",
+      "nombre": "Interacción Completa",
+      "descripcion": "Busca video, reproduce, da like y comenta",
+      "acciones": ["buscar", "reproducir", "skip_ad", "like", "comentar", "pausar"],
+      "parametros": {
+        "query": "",
+        "tiempo_reproduccion_sec": 90,
+        "skip_ads": true,
+        "comentario": "¡Excelente video!"
+      }
+    },
+    "rutina_solo_visualizacion": {
+      "id": "rutina_solo_visualizacion",
+      "nombre": "Solo Visualización",
+      "descripcion": "Navega a URL específica y reproduce sin interacciones",
+      "acciones": ["navegar", "reproducir", "skip_ad"],
+      "parametros": {
+        "url": "",
+        "tiempo_reproduccion_sec": 120,
+        "skip_ads": true
+      }
+    },
+    "rutina_suscripcion": {
+      "id": "rutina_suscripcion",
+      "nombre": "Suscripción y Campana",
+      "descripcion": "Busca canal, se suscribe y activa notificaciones",
+      "acciones": ["buscar", "navegar_canal", "suscribir", "activar_campana"],
+      "parametros": {
+        "query": "",
+        "activar_notificaciones": true
+      }
+    },
+    "rutina_playlist": {
+      "id": "rutina_playlist",
+      "nombre": "Reproducir Playlist",
+      "descripcion": "Reproduce una playlist completa o parcialmente",
+      "acciones": ["navegar", "reproducir_playlist", "skip_ads"],
+      "parametros": {
+        "playlist_url": "",
+        "videos_a_ver": 5,
+        "tiempo_por_video_sec": 60,
+        "skip_ads": true
+      }
+    }
+  },
+  "prompts": {
+    "base_youtube": {
+      "descripcion": "Prompt base para navegación en YouTube",
+      "contenido": "Eres un agente IA controlando un navegador. Tu tarea es navegar YouTube de manera natural y ejecutar las acciones indicadas. Reglas:\n- Espera a que las páginas carguen completamente\n- Si aparece un anuncio, espera o haz clic en 'Skip Ad' cuando esté disponible\n- No improvises acciones fuera de las indicadas\n- Reporta errores encontrados\n- Actúa como un usuario humano normal"
+    },
+    "busqueda": {
+      "descripcion": "Prompt para búsqueda de videos",
+      "contenido": "Busca en YouTube: '{query}'. Pasos:\n1. Localiza la barra de búsqueda\n2. Escribe el término de búsqueda\n3. Presiona Enter o haz clic en buscar\n4. Espera resultados\n5. Selecciona el primer video NO publicitario"
+    },
+    "reproduccion": {
+      "descripcion": "Prompt para reproducción de videos",
+      "contenido": "Reproduce el video actual. Pasos:\n1. Si hay anuncio, espera {ad_skip_delay} segundos y busca 'Skip Ad'\n2. Asegura que el video esté reproduciéndose\n3. Mantén reproducción por {tiempo} segundos\n4. Pausa cuando se indique"
+    },
+    "interaccion": {
+      "descripcion": "Prompt para interacciones (like, comentar)",
+      "contenido": "Interactúa con el video. Acciones:\n- Like: Busca y haz clic en el botón de like\n- Comentar: Desplázate a la sección de comentarios, haz clic en el campo, escribe: '{comentario}', envía\n- Suscribir: Busca y haz clic en el botón de suscripción"
+    }
+  }
+}

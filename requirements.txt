@@ -1,0 +1,30 @@
+# BotSOS - Multi-Model Session Manager
+# Required Python packages
+
+# GUI Framework
+PyQt6>=6.6.0
+
+# Browser Automation
+playwright>=1.40.0
+playwright-stealth>=1.0.6
+
+# LLM Integration
+ollama>=0.1.0
+
+# System Monitoring
+psutil>=5.9.0
+
+# Configuration
+pyyaml>=6.0.0
+
+# Security
+cryptography>=41.0.0
+
+# Async Support (Python 3.11+ has built-in, but ensures compatibility)
+aiohttp>=3.9.0
+
+# Optional: CAPTCHA Solving (uncomment if needed)
+# 2captcha-python>=1.2.0
+
+# Optional: Advanced Fingerprinting (uncomment if needed)
+# camoufox>=0.2.0
