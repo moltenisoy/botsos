@@ -1,11 +1,12 @@
 {
   "presets": {
     "windows_desktop": {
-      "name": "Windows Desktop",
+      "name": "Escritorio Windows",
       "user_agents": [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
       ],
       "viewport": {
         "width": [1920, 1680, 1440, 1366],
@@ -14,34 +15,35 @@
       "hardware_concurrency": [4, 8, 12, 16],
       "device_memory": [4, 8, 16, 32],
       "platform": "Win32",
-      "timezone": "America/New_York",
-      "languages": ["en-US", "en"],
+      "timezone": "America/Mexico_City",
+      "languages": ["es-MX", "es", "en-US", "en"],
       "webgl_vendor": "Google Inc. (NVIDIA)",
       "webgl_renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1060 Direct3D11 vs_5_0 ps_5_0)"
     },
-    "macos_laptop": {
-      "name": "macOS Laptop",
+    "windows_laptop": {
+      "name": "Laptop Windows",
       "user_agents": [
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
       ],
       "viewport": {
-        "width": [1440, 1680, 2560],
-        "height": [900, 1050, 1440]
+        "width": [1366, 1440, 1536],
+        "height": [768, 900, 864]
       },
-      "hardware_concurrency": [8, 10, 12],
-      "device_memory": [8, 16, 32],
-      "platform": "MacIntel",
-      "timezone": "America/Los_Angeles",
-      "languages": ["en-US", "en"],
-      "webgl_vendor": "Apple Inc.",
-      "webgl_renderer": "Apple M1"
+      "hardware_concurrency": [4, 8],
+      "device_memory": [4, 8, 16],
+      "platform": "Win32",
+      "timezone": "America/Bogota",
+      "languages": ["es-CO", "es", "en-US", "en"],
+      "webgl_vendor": "Google Inc. (Intel)",
+      "webgl_renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0)"
     },
     "android_mobile": {
-      "name": "Android Mobile",
+      "name": "Móvil Android",
       "user_agents": [
         "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
-        "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36"
+        "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36",
+        "Mozilla/5.0 (Linux; Android 13; SM-A546B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
       ],
       "viewport": {
         "width": [360, 390, 412],
@@ -50,30 +52,12 @@
       "hardware_concurrency": [4, 8],
       "device_memory": [4, 8, 12],
       "platform": "Linux armv8l",
-      "timezone": "America/New_York",
-      "languages": ["en-US", "en"],
+      "timezone": "America/Lima",
+      "languages": ["es-PE", "es", "en-US", "en"],
       "webgl_vendor": "Qualcomm",
       "webgl_renderer": "Adreno (TM) 740",
       "is_mobile": true,
       "has_touch": true
-    },
-    "linux_server": {
-      "name": "Linux Server",
-      "user_agents": [
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0"
-      ],
-      "viewport": {
-        "width": [1920, 1680, 1440],
-        "height": [1080, 1050, 900]
-      },
-      "hardware_concurrency": [4, 8, 16, 32],
-      "device_memory": [8, 16, 32, 64],
-      "platform": "Linux x86_64",
-      "timezone": "UTC",
-      "languages": ["en-US", "en"],
-      "webgl_vendor": "Mesa/X.org",
-      "webgl_renderer": "Mesa Intel(R) UHD Graphics 630"
     }
   },
   "spoofing_options": {
@@ -101,7 +85,8 @@
         "Georgia",
         "Verdana",
         "Courier New",
-        "Comic Sans MS"
+        "Segoe UI",
+        "Tahoma"
       ]
     }
   }
