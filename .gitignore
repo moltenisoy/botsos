@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+logs/*.log
+*.log
+
+# Data files (keep structure, ignore content)
+data/*.json
+!data/.gitkeep
+
+# Browser context (session data)
+browser_context/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Secrets and credentials
+.env
+*.pem
+*.key
+
+# Playwright
+playwright-report/
+test-results/
