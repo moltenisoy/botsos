@@ -38,7 +38,10 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QThreadPool, QRunnable, QObject
 from PyQt6.QtGui import QFont, QIcon, QColor
 
-from .session_config import SessionConfig, SessionConfigManager, BehaviorConfig, CaptchaConfig
+from .session_config import (
+    SessionConfig, SessionConfigManager, BehaviorConfig, CaptchaConfig,
+    ContingencyConfig, AdvancedBehaviorConfig, SystemHidingConfig, MfaConfig
+)
 from .proxy_manager import ProxyManager, ProxyEntry
 from .fingerprint_manager import FingerprintManager
 
@@ -215,8 +218,59 @@ class SessionManagerGUI(QMainWindow):
         self.resource_timer.timeout.connect(self._update_resource_usage)
         self.resource_timer.start(5000)  # Every 5 seconds
         
+        # Anomaly detection timer (from fase3.txt)
+        self.anomaly_timer = QTimer()
+        self.anomaly_timer.timeout.connect(self._check_anomalies)
+        self.anomaly_timer.start(5000)  # Every 5 seconds
+        
+        # Initialize contingency and anomaly managers (from fase3.txt)
+        self._init_phase3_managers()
+        
         # Setup advanced logging (from fase2.txt)
         self._setup_advanced_logging()
+    
+    def _init_phase3_managers(self):
+        """Initialize Phase 3 managers for contingency and anomaly detection."""
+        try:
+            from .advanced_features import ContingencyManager, AnomalyDetector, SystemHidingManager
+            self.contingency_manager = ContingencyManager()
+            self.anomaly_detector = AnomalyDetector()
+            self.system_hiding_manager = SystemHidingManager()
+        except ImportError as e:
+            logger.warning(f"Phase 3 managers not available: {e}")
+            self.contingency_manager = None
+            self.anomaly_detector = None
+            self.system_hiding_manager = None
+    
+    def _check_anomalies(self):
+        """Check for anomalies in active sessions (from fase3.txt)."""
+        if not self.anomaly_detector:
+            return
+        
+        for session_id, worker in self.workers.items():
+            try:
+                # Record CPU/RAM as metrics for anomaly detection
+                if PSUTIL_AVAILABLE:
+                    cpu = psutil.cpu_percent()
+                    ram = psutil.virtual_memory().percent
+                    
+                    self.anomaly_detector.record_metric(session_id, 'cpu_usage', cpu)
+                    self.anomaly_detector.record_metric(session_id, 'ram_usage', ram)
+                    
+                    # Check for CPU/RAM anomalies
+                    if self.anomaly_detector.check_anomaly(session_id, 'cpu_usage', cpu):
+                        self._on_log_message(session_id, f"⚠️ CPU anomaly detected: {cpu:.1f}%")
+                    
+                    if self.anomaly_detector.check_anomaly(session_id, 'ram_usage', ram):
+                        self._on_log_message(session_id, f"⚠️ RAM anomaly detected: {ram:.1f}%")
+                    
+                    # Alert if resources are critically high
+                    if cpu > 80:
+                        self._on_log_message(session_id, f"🔴 High CPU usage: {cpu:.1f}%")
+                    if ram > 80:
+                        self._on_log_message(session_id, f"🔴 High RAM usage: {ram:.1f}%")
+            except Exception as e:
+                logger.error(f"Error checking anomalies for {session_id}: {e}")
     
     def _setup_advanced_logging(self):
         """Setup advanced logging with RotatingFileHandler (from fase2.txt)."""
@@ -486,6 +540,10 @@ class SessionManagerGUI(QMainWindow):
         self.config_tabs.addTab(self._create_advanced_spoof_tab(), "🔒 Advanced Spoof")
         self.config_tabs.addTab(self._create_behavior_simulation_tab(), "🤖 Behavior Sim")
         self.config_tabs.addTab(self._create_captcha_tab(), "🔑 CAPTCHA")
+        # Phase 3 tabs
+        self.config_tabs.addTab(self._create_contingency_tab(), "🛡️ Contingency")
+        self.config_tabs.addTab(self._create_advanced_behavior_tab(), "⚡ Adv. Behavior")
+        self.config_tabs.addTab(self._create_system_hiding_tab(), "🔐 System Hiding")
         self.config_tabs.addTab(self._create_logging_tab(), "📝 Logs")
         layout.addWidget(self.config_tabs)
         
@@ -1072,6 +1130,271 @@ class SessionManagerGUI(QMainWindow):
         info_label.setStyleSheet("color: #808080; font-size: 10px;")
         layout.addWidget(info_label)
         
+        # Hybrid CAPTCHA settings (from fase3.txt)
+        hybrid_group = QGroupBox("Hybrid Solver (fase3)")
+        hybrid_layout = QFormLayout(hybrid_group)
+        
+        self.captcha_hybrid_mode = QCheckBox("Enable Hybrid Mode (AI first, human fallback)")
+        self.captcha_hybrid_mode.setChecked(True)
+        hybrid_layout.addRow(self.captcha_hybrid_mode)
+        
+        self.captcha_secondary_provider = QComboBox()
+        self.captcha_secondary_provider.addItems(["capsolver", "anticaptcha", "2captcha"])
+        hybrid_layout.addRow("Fallback Provider:", self.captcha_secondary_provider)
+        
+        layout.addWidget(hybrid_group)
+        
+        layout.addStretch()
+        return tab
+    
+    def _create_contingency_tab(self) -> QWidget:
+        """Create the contingency planning tab (from fase3.txt)."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        
+        # Eviction Thresholds
+        eviction_group = QGroupBox("Eviction Thresholds")
+        eviction_layout = QFormLayout(eviction_group)
+        
+        self.block_rate_threshold = QDoubleSpinBox()
+        self.block_rate_threshold.setRange(0.01, 0.50)
+        self.block_rate_threshold.setValue(0.10)
+        self.block_rate_threshold.setSingleStep(0.01)
+        self.block_rate_threshold.setSuffix(" (5-10%)")
+        eviction_layout.addRow("Block Rate Threshold:", self.block_rate_threshold)
+        
+        self.consecutive_failure_threshold = QSpinBox()
+        self.consecutive_failure_threshold.setRange(1, 10)
+        self.consecutive_failure_threshold.setValue(3)
+        eviction_layout.addRow("Consecutive Failures:", self.consecutive_failure_threshold)
+        
+        layout.addWidget(eviction_group)
+        
+        # Cool-down Settings
+        cooldown_group = QGroupBox("Cool-down Settings")
+        cooldown_layout = QFormLayout(cooldown_group)
+        
+        self.cool_down_min = QSpinBox()
+        self.cool_down_min.setRange(60, 1800)
+        self.cool_down_min.setValue(300)
+        self.cool_down_min.setSuffix(" sec (5 min)")
+        cooldown_layout.addRow("Min Cool-down:", self.cool_down_min)
+        
+        self.cool_down_max = QSpinBox()
+        self.cool_down_max.setRange(300, 3600)
+        self.cool_down_max.setValue(1200)
+        self.cool_down_max.setSuffix(" sec (20 min)")
+        cooldown_layout.addRow("Max Cool-down:", self.cool_down_max)
+        
+        layout.addWidget(cooldown_group)
+        
+        # Ban Recovery
+        recovery_group = QGroupBox("Ban Recovery Strategy")
+        recovery_layout = QFormLayout(recovery_group)
+        
+        self.ban_recovery_strategy = QComboBox()
+        self.ban_recovery_strategy.addItems(["mobile_fallback", "throttle", "rotate_all"])
+        recovery_layout.addRow("Recovery Strategy:", self.ban_recovery_strategy)
+        
+        self.enable_dynamic_throttling = QCheckBox("Enable Dynamic Throttling")
+        self.enable_dynamic_throttling.setChecked(True)
+        recovery_layout.addRow(self.enable_dynamic_throttling)
+        
+        layout.addWidget(recovery_group)
+        
+        # Sticky Sessions
+        sticky_group = QGroupBox("Sticky Sessions")
+        sticky_layout = QFormLayout(sticky_group)
+        
+        self.sticky_session_duration = QSpinBox()
+        self.sticky_session_duration.setRange(60, 3600)
+        self.sticky_session_duration.setValue(600)
+        self.sticky_session_duration.setSuffix(" sec (10 min)")
+        sticky_layout.addRow("Session Duration:", self.sticky_session_duration)
+        
+        self.enable_session_persistence = QCheckBox("Enable Session Persistence")
+        self.enable_session_persistence.setChecked(True)
+        sticky_layout.addRow(self.enable_session_persistence)
+        
+        layout.addWidget(sticky_group)
+        
+        layout.addStretch()
+        return tab
+    
+    def _create_advanced_behavior_tab(self) -> QWidget:
+        """Create the advanced behavior configuration tab (from fase3.txt)."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        
+        # Polymorphic Fingerprinting
+        poly_group = QGroupBox("Polymorphic Fingerprinting")
+        poly_layout = QFormLayout(poly_group)
+        
+        self.polymorphic_enabled = QCheckBox("Enable Polymorphic Fingerprinting")
+        self.polymorphic_enabled.setChecked(True)
+        poly_layout.addRow(self.polymorphic_enabled)
+        
+        self.fingerprint_rotation_interval = QSpinBox()
+        self.fingerprint_rotation_interval.setRange(300, 7200)
+        self.fingerprint_rotation_interval.setValue(3600)
+        self.fingerprint_rotation_interval.setSuffix(" sec (1 hr)")
+        poly_layout.addRow("Rotation Interval:", self.fingerprint_rotation_interval)
+        
+        layout.addWidget(poly_group)
+        
+        # OS-Level Input
+        os_group = QGroupBox("OS-Level Input Emulation")
+        os_layout = QFormLayout(os_group)
+        
+        self.os_level_input_enabled = QCheckBox("Enable OS-Level Inputs (nodriver-style)")
+        os_layout.addRow(self.os_level_input_enabled)
+        
+        layout.addWidget(os_group)
+        
+        # Touch Emulation
+        touch_group = QGroupBox("Touch Emulation (Mobile)")
+        touch_layout = QFormLayout(touch_group)
+        
+        self.touch_emulation_enabled = QCheckBox("Enable Touch Emulation")
+        touch_layout.addRow(self.touch_emulation_enabled)
+        
+        self.touch_pressure_variation = QDoubleSpinBox()
+        self.touch_pressure_variation.setRange(0.0, 0.5)
+        self.touch_pressure_variation.setValue(0.2)
+        self.touch_pressure_variation.setSingleStep(0.05)
+        self.touch_pressure_variation.setSuffix(" (20%)")
+        touch_layout.addRow("Pressure Variation:", self.touch_pressure_variation)
+        
+        layout.addWidget(touch_group)
+        
+        # Micro-jitters
+        jitter_group = QGroupBox("Micro-Jitters")
+        jitter_layout = QFormLayout(jitter_group)
+        
+        self.micro_jitter_enabled = QCheckBox("Enable Micro-Jitters")
+        self.micro_jitter_enabled.setChecked(True)
+        jitter_layout.addRow(self.micro_jitter_enabled)
+        
+        self.micro_jitter_amplitude = QSpinBox()
+        self.micro_jitter_amplitude.setRange(1, 10)
+        self.micro_jitter_amplitude.setValue(2)
+        self.micro_jitter_amplitude.setSuffix(" px")
+        jitter_layout.addRow("Jitter Amplitude:", self.micro_jitter_amplitude)
+        
+        layout.addWidget(jitter_group)
+        
+        # Typing Patterns
+        typing_group = QGroupBox("Advanced Typing Patterns")
+        typing_layout = QFormLayout(typing_group)
+        
+        self.typing_pressure_enabled = QCheckBox("Enable Typing Pressure Simulation")
+        typing_layout.addRow(self.typing_pressure_enabled)
+        
+        self.typing_rhythm_variation = QDoubleSpinBox()
+        self.typing_rhythm_variation.setRange(0.0, 0.5)
+        self.typing_rhythm_variation.setValue(0.15)
+        self.typing_rhythm_variation.setSingleStep(0.05)
+        self.typing_rhythm_variation.setSuffix(" (15%)")
+        typing_layout.addRow("Rhythm Variation:", self.typing_rhythm_variation)
+        
+        layout.addWidget(typing_group)
+        
+        layout.addStretch()
+        return tab
+    
+    def _create_system_hiding_tab(self) -> QWidget:
+        """Create the system hiding configuration tab (from fase3.txt)."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        
+        # CDP Port Blocking
+        cdp_group = QGroupBox("CDP Port Blocking")
+        cdp_layout = QFormLayout(cdp_group)
+        
+        self.block_cdp_ports = QCheckBox("Block CDP Debugging Ports")
+        self.block_cdp_ports.setChecked(True)
+        cdp_layout.addRow(self.block_cdp_ports)
+        
+        self.cdp_port_default = QSpinBox()
+        self.cdp_port_default.setRange(1, 65535)
+        self.cdp_port_default.setValue(9222)
+        cdp_layout.addRow("CDP Port:", self.cdp_port_default)
+        
+        layout.addWidget(cdp_group)
+        
+        # Loopback/Interface Management
+        loopback_group = QGroupBox("Network Interface Management")
+        loopback_layout = QFormLayout(loopback_group)
+        
+        self.disable_loopback_services = QCheckBox("Disable Loopback Services")
+        loopback_layout.addRow(self.disable_loopback_services)
+        
+        layout.addWidget(loopback_group)
+        
+        # Ephemeral Port Randomization
+        port_group = QGroupBox("Ephemeral Port Randomization")
+        port_layout = QFormLayout(port_group)
+        
+        self.randomize_ephemeral_ports = QCheckBox("Randomize Ephemeral Ports")
+        self.randomize_ephemeral_ports.setChecked(True)
+        port_layout.addRow(self.randomize_ephemeral_ports)
+        
+        self.ephemeral_port_min = QSpinBox()
+        self.ephemeral_port_min.setRange(49152, 60000)
+        self.ephemeral_port_min.setValue(49152)
+        port_layout.addRow("Min Port:", self.ephemeral_port_min)
+        
+        self.ephemeral_port_max = QSpinBox()
+        self.ephemeral_port_max.setRange(55000, 65535)
+        self.ephemeral_port_max.setValue(65535)
+        port_layout.addRow("Max Port:", self.ephemeral_port_max)
+        
+        layout.addWidget(port_group)
+        
+        # WebRTC Complete Block
+        webrtc_group = QGroupBox("WebRTC Protection")
+        webrtc_layout = QFormLayout(webrtc_group)
+        
+        self.block_webrtc_completely = QCheckBox("Block WebRTC Completely (aggressive)")
+        webrtc_layout.addRow(self.block_webrtc_completely)
+        
+        webrtc_info = QLabel(
+            "⚠️ Complete WebRTC blocking is more aggressive than spoofing.\n"
+            "May break some video/audio features."
+        )
+        webrtc_info.setWordWrap(True)
+        webrtc_info.setStyleSheet("color: #ffa500; font-size: 10px;")
+        webrtc_layout.addRow(webrtc_info)
+        
+        layout.addWidget(webrtc_group)
+        
+        # MFA Contingency (from fase3.txt)
+        mfa_group = QGroupBox("MFA Contingency")
+        mfa_layout = QFormLayout(mfa_group)
+        
+        self.mfa_simulation_enabled = QCheckBox("Enable MFA Simulation")
+        mfa_layout.addRow(self.mfa_simulation_enabled)
+        
+        self.mfa_method = QComboBox()
+        self.mfa_method.addItems(["none", "email", "sms"])
+        mfa_layout.addRow("MFA Method:", self.mfa_method)
+        
+        self.mfa_timeout = QSpinBox()
+        self.mfa_timeout.setRange(30, 300)
+        self.mfa_timeout.setValue(120)
+        self.mfa_timeout.setSuffix(" sec")
+        mfa_layout.addRow("MFA Timeout:", self.mfa_timeout)
+        
+        mfa_warning = QLabel(
+            "⚠️ MFA simulation is for testing purposes only.\n"
+            "Use ethically and comply with platform terms of service."
+        )
+        mfa_warning.setWordWrap(True)
+        mfa_warning.setStyleSheet("color: #ff6b6b; font-size: 10px;")
+        mfa_layout.addRow(mfa_warning)
+        
+        layout.addWidget(mfa_group)
+        
         layout.addStretch()
         return tab
     
@@ -1238,10 +1561,59 @@ class SessionManagerGUI(QMainWindow):
         self.captcha_timeout.setValue(captcha.timeout_sec)
         self.captcha_max_retries.setValue(captcha.max_retries)
         
+        # CAPTCHA Hybrid settings (from fase3.txt)
+        self.captcha_hybrid_mode.setChecked(captcha.hybrid_mode)
+        index = self.captcha_secondary_provider.findText(captcha.secondary_provider)
+        if index >= 0:
+            self.captcha_secondary_provider.setCurrentIndex(index)
+        
         # Retry settings
         self.max_retries.setValue(session.max_retries)
         self.retry_delay.setValue(session.retry_delay_sec)
         self.exponential_backoff.setChecked(session.exponential_backoff)
+        
+        # Contingency settings (from fase3.txt)
+        contingency = session.contingency
+        self.block_rate_threshold.setValue(contingency.block_rate_threshold)
+        self.consecutive_failure_threshold.setValue(contingency.consecutive_failure_threshold)
+        self.cool_down_min.setValue(contingency.cool_down_min_sec)
+        self.cool_down_max.setValue(contingency.cool_down_max_sec)
+        index = self.ban_recovery_strategy.findText(contingency.ban_recovery_strategy)
+        if index >= 0:
+            self.ban_recovery_strategy.setCurrentIndex(index)
+        self.enable_dynamic_throttling.setChecked(contingency.enable_dynamic_throttling)
+        self.sticky_session_duration.setValue(contingency.sticky_session_duration_sec)
+        self.enable_session_persistence.setChecked(contingency.enable_session_persistence)
+        
+        # Advanced Behavior settings (from fase3.txt)
+        adv_behavior = session.advanced_behavior
+        self.polymorphic_enabled.setChecked(adv_behavior.polymorphic_fingerprint_enabled)
+        self.fingerprint_rotation_interval.setValue(adv_behavior.fingerprint_rotation_interval_sec)
+        self.os_level_input_enabled.setChecked(adv_behavior.os_level_input_enabled)
+        self.touch_emulation_enabled.setChecked(adv_behavior.touch_emulation_enabled)
+        self.touch_pressure_variation.setValue(adv_behavior.touch_pressure_variation)
+        self.micro_jitter_enabled.setChecked(adv_behavior.micro_jitter_enabled)
+        self.micro_jitter_amplitude.setValue(adv_behavior.micro_jitter_amplitude)
+        self.typing_pressure_enabled.setChecked(adv_behavior.typing_pressure_enabled)
+        self.typing_rhythm_variation.setValue(adv_behavior.typing_rhythm_variation)
+        
+        # System Hiding settings (from fase3.txt)
+        system_hiding = session.system_hiding
+        self.block_cdp_ports.setChecked(system_hiding.block_cdp_ports)
+        self.cdp_port_default.setValue(system_hiding.cdp_port_default)
+        self.disable_loopback_services.setChecked(system_hiding.disable_loopback_services)
+        self.randomize_ephemeral_ports.setChecked(system_hiding.randomize_ephemeral_ports)
+        self.ephemeral_port_min.setValue(system_hiding.ephemeral_port_min)
+        self.ephemeral_port_max.setValue(system_hiding.ephemeral_port_max)
+        self.block_webrtc_completely.setChecked(system_hiding.block_webrtc_completely)
+        
+        # MFA settings (from fase3.txt)
+        mfa = session.mfa
+        self.mfa_simulation_enabled.setChecked(mfa.mfa_simulation_enabled)
+        index = self.mfa_method.findText(mfa.mfa_method)
+        if index >= 0:
+            self.mfa_method.setCurrentIndex(index)
+        self.mfa_timeout.setValue(mfa.mfa_timeout_sec)
     
     def _on_session_name_changed(self, text: str):
         """Handle session name change."""
@@ -1386,10 +1758,49 @@ class SessionManagerGUI(QMainWindow):
         session.captcha.timeout_sec = self.captcha_timeout.value()
         session.captcha.max_retries = self.captcha_max_retries.value()
         
+        # Update CAPTCHA Hybrid settings (from fase3.txt)
+        session.captcha.hybrid_mode = self.captcha_hybrid_mode.isChecked()
+        session.captcha.secondary_provider = self.captcha_secondary_provider.currentText()
+        
         # Update retry settings
         session.max_retries = self.max_retries.value()
         session.retry_delay_sec = self.retry_delay.value()
         session.exponential_backoff = self.exponential_backoff.isChecked()
+        
+        # Update Contingency settings (from fase3.txt)
+        session.contingency.block_rate_threshold = self.block_rate_threshold.value()
+        session.contingency.consecutive_failure_threshold = self.consecutive_failure_threshold.value()
+        session.contingency.cool_down_min_sec = self.cool_down_min.value()
+        session.contingency.cool_down_max_sec = self.cool_down_max.value()
+        session.contingency.ban_recovery_strategy = self.ban_recovery_strategy.currentText()
+        session.contingency.enable_dynamic_throttling = self.enable_dynamic_throttling.isChecked()
+        session.contingency.sticky_session_duration_sec = self.sticky_session_duration.value()
+        session.contingency.enable_session_persistence = self.enable_session_persistence.isChecked()
+        
+        # Update Advanced Behavior settings (from fase3.txt)
+        session.advanced_behavior.polymorphic_fingerprint_enabled = self.polymorphic_enabled.isChecked()
+        session.advanced_behavior.fingerprint_rotation_interval_sec = self.fingerprint_rotation_interval.value()
+        session.advanced_behavior.os_level_input_enabled = self.os_level_input_enabled.isChecked()
+        session.advanced_behavior.touch_emulation_enabled = self.touch_emulation_enabled.isChecked()
+        session.advanced_behavior.touch_pressure_variation = self.touch_pressure_variation.value()
+        session.advanced_behavior.micro_jitter_enabled = self.micro_jitter_enabled.isChecked()
+        session.advanced_behavior.micro_jitter_amplitude = self.micro_jitter_amplitude.value()
+        session.advanced_behavior.typing_pressure_enabled = self.typing_pressure_enabled.isChecked()
+        session.advanced_behavior.typing_rhythm_variation = self.typing_rhythm_variation.value()
+        
+        # Update System Hiding settings (from fase3.txt)
+        session.system_hiding.block_cdp_ports = self.block_cdp_ports.isChecked()
+        session.system_hiding.cdp_port_default = self.cdp_port_default.value()
+        session.system_hiding.disable_loopback_services = self.disable_loopback_services.isChecked()
+        session.system_hiding.randomize_ephemeral_ports = self.randomize_ephemeral_ports.isChecked()
+        session.system_hiding.ephemeral_port_min = self.ephemeral_port_min.value()
+        session.system_hiding.ephemeral_port_max = self.ephemeral_port_max.value()
+        session.system_hiding.block_webrtc_completely = self.block_webrtc_completely.isChecked()
+        
+        # Update MFA settings (from fase3.txt)
+        session.mfa.mfa_simulation_enabled = self.mfa_simulation_enabled.isChecked()
+        session.mfa.mfa_method = self.mfa_method.currentText()
+        session.mfa.mfa_timeout_sec = self.mfa_timeout.value()
         
         # Store CAPTCHA API key securely (from fase2.txt)
         api_key = self.captcha_api_key.text()

@@ -8,6 +8,10 @@ Handles advanced anti-detection features including:
 - Proxy validation
 - Secure credential storage
 - Retry mechanisms
+- Contingency planning and recovery (fase3.txt)
+- System hiding and port blocking (fase3.txt)
+- Anomaly detection (fase3.txt)
+- Polymorphic fingerprinting (fase3.txt)
 """
 
 import asyncio
@@ -17,7 +21,7 @@ import os
 import time
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any, Callable
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -895,3 +899,409 @@ class AdvancedLogging:
                 deleted += 1
         
         return deleted
+
+
+@dataclass
+class ContingencyState:
+    """Tracks contingency-related state for a session (from fase3.txt)."""
+    consecutive_failures: int = 0
+    total_blocks: int = 0
+    total_requests: int = 0
+    cool_down_until: Optional[datetime] = None
+    last_proxy_rotation: Optional[datetime] = None
+    session_start_time: Optional[datetime] = None
+    
+    @property
+    def block_rate(self) -> float:
+        """Calculate current block rate."""
+        if self.total_requests == 0:
+            return 0.0
+        return self.total_blocks / self.total_requests
+    
+    def record_success(self):
+        """Record a successful request."""
+        self.consecutive_failures = 0
+        self.total_requests += 1
+    
+    def record_failure(self, is_block: bool = False):
+        """Record a failed request."""
+        self.consecutive_failures += 1
+        self.total_requests += 1
+        if is_block:
+            self.total_blocks += 1
+    
+    def should_evict_proxy(self, block_threshold: float, failure_threshold: int) -> bool:
+        """Check if current proxy should be evicted."""
+        return (
+            self.block_rate > block_threshold or 
+            self.consecutive_failures >= failure_threshold
+        )
+    
+    def is_in_cool_down(self) -> bool:
+        """Check if session is in cool-down period."""
+        if self.cool_down_until is None:
+            return False
+        return datetime.now() < self.cool_down_until
+    
+    def start_cool_down(self, duration_sec: int):
+        """Start a cool-down period."""
+        self.cool_down_until = datetime.now() + timedelta(seconds=duration_sec)
+
+
+class ContingencyManager:
+    """Manages contingency planning and recovery for sessions (from fase3.txt)."""
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        """Initialize the contingency manager.
+        
+        Args:
+            config: Contingency configuration dictionary.
+        """
+        self.config = config or {}
+        self.session_states: Dict[str, ContingencyState] = {}
+    
+    def get_session_state(self, session_id: str) -> ContingencyState:
+        """Get or create state for a session."""
+        if session_id not in self.session_states:
+            self.session_states[session_id] = ContingencyState()
+            self.session_states[session_id].session_start_time = datetime.now()
+        return self.session_states[session_id]
+    
+    def record_success(self, session_id: str):
+        """Record a successful action for a session."""
+        state = self.get_session_state(session_id)
+        state.record_success()
+    
+    def record_failure(self, session_id: str, is_block: bool = False):
+        """Record a failed action for a session."""
+        state = self.get_session_state(session_id)
+        state.record_failure(is_block)
+    
+    def should_rotate_proxy(self, session_id: str) -> bool:
+        """Check if proxy should be rotated for a session."""
+        state = self.get_session_state(session_id)
+        block_threshold = self.config.get('block_rate_threshold', 0.10)
+        failure_threshold = self.config.get('consecutive_failure_threshold', 3)
+        return state.should_evict_proxy(block_threshold, failure_threshold)
+    
+    def should_enter_cool_down(self, session_id: str) -> bool:
+        """Check if session should enter cool-down."""
+        state = self.get_session_state(session_id)
+        # Enter cool-down after significant failures
+        return state.consecutive_failures >= self.config.get('consecutive_failure_threshold', 3) * 2
+    
+    def get_cool_down_duration(self) -> int:
+        """Get appropriate cool-down duration in seconds."""
+        min_sec = self.config.get('cool_down_min_sec', 300)
+        max_sec = self.config.get('cool_down_max_sec', 1200)
+        return random.randint(min_sec, max_sec)
+    
+    def get_recovery_strategy(self) -> str:
+        """Get the ban recovery strategy."""
+        return self.config.get('ban_recovery_strategy', 'mobile_fallback')
+    
+    def reset_session_state(self, session_id: str):
+        """Reset state for a session."""
+        if session_id in self.session_states:
+            del self.session_states[session_id]
+
+
+class SystemHidingManager:
+    """Manages system hiding features for anti-detection (from fase3.txt)."""
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        """Initialize the system hiding manager.
+        
+        Args:
+            config: System hiding configuration dictionary.
+        """
+        self.config = config or {}
+        self._blocked_ports: List[int] = []
+    
+    def get_random_ephemeral_port(self) -> int:
+        """Get a random ephemeral port."""
+        min_port = self.config.get('ephemeral_port_min', 49152)
+        max_port = self.config.get('ephemeral_port_max', 65535)
+        return random.randint(min_port, max_port)
+    
+    def block_cdp_port(self, port: int = 9222) -> bool:
+        """Block CDP debugging port.
+        
+        Note: Actual firewall manipulation requires elevated privileges.
+        This method returns the command that would be used.
+        
+        Args:
+            port: CDP port to block.
+            
+        Returns:
+            True if command was prepared successfully.
+        """
+        if not self.config.get('block_cdp_ports', True):
+            return False
+        
+        import platform
+        
+        try:
+            if platform.system() == 'Windows':
+                # Windows netsh command
+                cmd = f'netsh advfirewall firewall add rule name="Block CDP {port}" dir=in action=block protocol=tcp localport={port}'
+                logger.info(f"CDP blocking command (Windows): {cmd}")
+            else:
+                # Linux iptables command
+                cmd = f'iptables -A INPUT -p tcp --dport {port} -j DROP'
+                logger.info(f"CDP blocking command (Linux): {cmd}")
+            
+            self._blocked_ports.append(port)
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to prepare CDP port blocking: {e}")
+            return False
+    
+    def get_webrtc_blocking_script(self) -> str:
+        """Get JavaScript to completely block WebRTC.
+        
+        Returns:
+            JavaScript code to inject.
+        """
+        if not self.config.get('block_webrtc_completely', False):
+            return ""
+        
+        return """
+            // Completely disable WebRTC
+            if (typeof RTCPeerConnection !== 'undefined') {
+                RTCPeerConnection = undefined;
+            }
+            if (typeof webkitRTCPeerConnection !== 'undefined') {
+                webkitRTCPeerConnection = undefined;
+            }
+            if (typeof RTCDataChannel !== 'undefined') {
+                RTCDataChannel = undefined;
+            }
+            if (typeof RTCSessionDescription !== 'undefined') {
+                RTCSessionDescription = undefined;
+            }
+            if (navigator.mediaDevices) {
+                navigator.mediaDevices.getUserMedia = () => Promise.reject(new Error('Not allowed'));
+            }
+        """
+    
+    def get_port_hiding_scripts(self) -> List[str]:
+        """Get scripts to hide port information.
+        
+        Returns:
+            List of JavaScript scripts.
+        """
+        scripts = []
+        
+        # Hide localhost connections
+        scripts.append("""
+            // Prevent detection of local connections
+            const originalFetch = window.fetch;
+            window.fetch = function(url, ...args) {
+                if (typeof url === 'string' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+                    return Promise.reject(new Error('Network error'));
+                }
+                return originalFetch.apply(this, [url, ...args]);
+            };
+        """)
+        
+        return scripts
+
+
+class AnomalyDetector:
+    """Detects anomalies in session behavior for contingency triggering (from fase3.txt)."""
+    
+    def __init__(self, baseline_period_sec: int = 300):
+        """Initialize the anomaly detector.
+        
+        Args:
+            baseline_period_sec: Period for establishing baseline metrics.
+        """
+        self.baseline_period_sec = baseline_period_sec
+        self.metrics: Dict[str, List[Dict[str, Any]]] = {}
+        self.baselines: Dict[str, Dict[str, float]] = {}
+        self.anomaly_threshold = 0.10  # 10% deviation triggers anomaly
+    
+    def record_metric(self, session_id: str, metric_name: str, value: float):
+        """Record a metric value for a session.
+        
+        Args:
+            session_id: Session identifier.
+            metric_name: Name of the metric (e.g., 'bounce_rate', 'api_calls').
+            value: Metric value.
+        """
+        key = f"{session_id}:{metric_name}"
+        if key not in self.metrics:
+            self.metrics[key] = []
+        
+        self.metrics[key].append({
+            'timestamp': datetime.now(),
+            'value': value
+        })
+        
+        # Keep only recent metrics
+        cutoff = datetime.now() - timedelta(seconds=self.baseline_period_sec * 2)
+        self.metrics[key] = [m for m in self.metrics[key] if m['timestamp'] > cutoff]
+    
+    def calculate_baseline(self, session_id: str, metric_name: str) -> Optional[float]:
+        """Calculate baseline for a metric.
+        
+        Args:
+            session_id: Session identifier.
+            metric_name: Name of the metric.
+            
+        Returns:
+            Baseline value or None if insufficient data.
+        """
+        key = f"{session_id}:{metric_name}"
+        if key not in self.metrics or len(self.metrics[key]) < 5:
+            return None
+        
+        values = [m['value'] for m in self.metrics[key]]
+        baseline = sum(values) / len(values)
+        self.baselines[key] = {'mean': baseline, 'count': len(values)}
+        return baseline
+    
+    def check_anomaly(self, session_id: str, metric_name: str, current_value: float) -> bool:
+        """Check if current value is an anomaly.
+        
+        Args:
+            session_id: Session identifier.
+            metric_name: Name of the metric.
+            current_value: Current metric value.
+            
+        Returns:
+            True if anomaly detected, False otherwise.
+        """
+        key = f"{session_id}:{metric_name}"
+        
+        if key not in self.baselines:
+            baseline = self.calculate_baseline(session_id, metric_name)
+            if baseline is None:
+                return False
+        else:
+            baseline = self.baselines[key]['mean']
+        
+        if baseline == 0:
+            return current_value > 0
+        
+        deviation = abs(current_value - baseline) / baseline
+        return deviation > self.anomaly_threshold
+    
+    def get_anomaly_report(self, session_id: str) -> Dict[str, Any]:
+        """Get a report of anomalies for a session.
+        
+        Args:
+            session_id: Session identifier.
+            
+        Returns:
+            Dictionary with anomaly information.
+        """
+        report = {
+            'session_id': session_id,
+            'anomalies': [],
+            'baselines': {}
+        }
+        
+        for key, baseline_data in self.baselines.items():
+            if key.startswith(f"{session_id}:"):
+                metric_name = key.split(':', 1)[1]
+                report['baselines'][metric_name] = baseline_data['mean']
+                
+                if key in self.metrics and self.metrics[key]:
+                    current = self.metrics[key][-1]['value']
+                    if self.check_anomaly(session_id, metric_name, current):
+                        report['anomalies'].append({
+                            'metric': metric_name,
+                            'current': current,
+                            'baseline': baseline_data['mean']
+                        })
+        
+        return report
+
+
+class PolymorphicFingerprint:
+    """Generates polymorphic fingerprints that change over time (from fase3.txt)."""
+    
+    def __init__(self, base_fingerprint: Optional[Dict[str, Any]] = None):
+        """Initialize with a base fingerprint.
+        
+        Args:
+            base_fingerprint: Base fingerprint configuration.
+        """
+        self.base = base_fingerprint or {}
+        self.current = self.base.copy()
+        self.rotation_count = 0
+    
+    def apply_variation(self, variation_level: float = 0.1) -> Dict[str, Any]:
+        """Apply random variations to fingerprint.
+        
+        Args:
+            variation_level: Amount of variation (0.0 to 1.0).
+            
+        Returns:
+            Modified fingerprint.
+        """
+        fingerprint = self.current.copy()
+        
+        # Vary numeric values
+        numeric_fields = [
+            'viewport_width', 'viewport_height', 
+            'hardware_concurrency', 'device_memory'
+        ]
+        
+        for field in numeric_fields:
+            if field in fingerprint:
+                value = fingerprint[field]
+                variation = max(1, int(value * variation_level))  # Minimum variation of 1
+                fingerprint[field] = value + random.randint(-variation, variation)
+        
+        # Vary canvas noise level
+        if 'canvas_noise_level' in fingerprint:
+            level = fingerprint['canvas_noise_level']
+            fingerprint['canvas_noise_level'] = max(0, min(10, level + random.randint(-1, 1)))
+        
+        # Vary audio noise level
+        if 'audio_noise_level' in fingerprint:
+            level = fingerprint['audio_noise_level']
+            fingerprint['audio_noise_level'] = max(0, min(10, level + random.randint(-1, 1)))
+        
+        self.current = fingerprint
+        self.rotation_count += 1
+        
+        return fingerprint
+    
+    def get_polymorphic_scripts(self) -> List[str]:
+        """Get JavaScript scripts for polymorphic fingerprinting.
+        
+        Returns:
+            List of JavaScript injection scripts.
+        """
+        scripts = []
+        
+        # Polymorphic navigator properties
+        scripts.append(f"""
+            // Polymorphic variations
+            const originalGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+            
+            // Add slight variation to performance.now()
+            const perfOffset = {random.uniform(-0.1, 0.1)};
+            const originalNow = performance.now;
+            performance.now = function() {{
+                return originalNow.call(performance) + perfOffset;
+            }};
+            
+            // Add variation to Date.now()
+            const dateOffset = {random.randint(-100, 100)};
+            const originalDateNow = Date.now;
+            Date.now = function() {{
+                return originalDateNow() + dateOffset;
+            }};
+        """)
+        
+        return scripts
+    
+    def reset_to_base(self):
+        """Reset to base fingerprint."""
+        self.current = self.base.copy()
