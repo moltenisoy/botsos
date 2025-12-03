@@ -14,6 +14,7 @@ import asyncio
 import logging
 import random
 import os
+import time
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any, Callable
 from datetime import datetime
@@ -292,17 +293,22 @@ class CaptchaSolver:
         if not self.config.enabled or not self.config.api_key:
             return False
         
-        try:
-            if self.config.provider == "2captcha":
+        if self.config.provider == "2captcha":
+            try:
                 from twocaptcha import TwoCaptcha
+            except ImportError:
+                logger.warning("2captcha-python not installed. Install with: pip install 2captcha-python")
+                return False
+            
+            try:
                 self._solver = TwoCaptcha(self.config.api_key)
                 return True
-        except ImportError:
-            logger.warning("2captcha-python not installed. Install with: pip install 2captcha-python")
-        except Exception as e:
-            logger.error(f"Failed to initialize CAPTCHA solver: {e}")
-        
-        return False
+            except Exception as e:
+                logger.error(f"Failed to initialize 2captcha solver: {e}")
+                return False
+        else:
+            logger.warning(f"Unsupported CAPTCHA provider: {self.config.provider}")
+            return False
     
     async def solve_recaptcha_v2(self, site_key: str, page_url: str) -> Optional[str]:
         """Solve reCAPTCHA v2.
@@ -434,7 +440,7 @@ class ProxyValidator:
             proxy_auth = aiohttp.BasicAuth(username, password)
         
         try:
-            start_time = datetime.now()
+            start_time = time.perf_counter()
             
             async with aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=self.timeout_sec)
@@ -450,7 +456,7 @@ class ProxyValidator:
                                 data = await response.json()
                                 result["valid"] = True
                                 result["ip"] = data.get("origin") or data.get("ip")
-                                result["latency_ms"] = (datetime.now() - start_time).total_seconds() * 1000
+                                result["latency_ms"] = (time.perf_counter() - start_time) * 1000
                                 return result
                     except Exception:
                         continue

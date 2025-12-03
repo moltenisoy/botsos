@@ -193,7 +193,9 @@ class SessionManagerGUI(QMainWindow):
         
         # Initialize QThreadPool for parallel session execution (from fase2.txt)
         self.threadpool = QThreadPool()
-        self.threadpool.setMaxThreadCount(6)  # Limit based on hardware
+        # Use ideal thread count based on system, capped at 8 for resource management
+        ideal_threads = min(QThread.idealThreadCount(), 8)
+        self.threadpool.setMaxThreadCount(max(2, ideal_threads))
         
         # Session workers (both QThread and QRunnable tracking)
         self.workers: Dict[str, SessionWorker] = {}
@@ -1187,7 +1189,10 @@ class SessionManagerGUI(QMainWindow):
         if index >= 0:
             self.timezone_combo.setCurrentIndex(index)
         self.canvas_noise.setChecked(fp.canvas_noise_enabled)
+        # Sync both canvas noise controls
         self.canvas_noise_level.setValue(fp.canvas_noise_level)
+        self.adv_canvas_noise.setValue(fp.canvas_noise_level)
+        self.adv_canvas_noise_label.setText(str(fp.canvas_noise_level))
         self.webrtc_protection.setChecked(fp.webrtc_protection_enabled)
         self.webgl_spoofing.setChecked(fp.webgl_spoofing_enabled)
         self.audio_spoofing.setChecked(fp.audio_context_spoofing_enabled)
@@ -1203,8 +1208,7 @@ class SessionManagerGUI(QMainWindow):
         index = self.webgpu_architecture.findText(fp.webgpu_architecture)
         if index >= 0:
             self.webgpu_architecture.setCurrentIndex(index)
-        self.adv_canvas_noise.setValue(fp.canvas_noise_level)
-        self.adv_canvas_noise_label.setText(str(fp.canvas_noise_level))
+        # Canvas noise already set above in fingerprint section
         self.custom_fonts_edit.setText("\n".join(fp.custom_fonts))
         
         # Behavior Simulation (from fase2.txt)
@@ -1353,7 +1357,8 @@ class SessionManagerGUI(QMainWindow):
         session.fingerprint.device_memory = self.device_memory.value()
         session.fingerprint.timezone = self.timezone_combo.currentText()
         session.fingerprint.canvas_noise_enabled = self.canvas_noise.isChecked()
-        session.fingerprint.canvas_noise_level = self.canvas_noise_level.value()
+        # Use the advanced canvas noise slider value as the primary source
+        session.fingerprint.canvas_noise_level = self.adv_canvas_noise.value()
         session.fingerprint.webrtc_protection_enabled = self.webrtc_protection.isChecked()
         session.fingerprint.webgl_spoofing_enabled = self.webgl_spoofing.isChecked()
         session.fingerprint.audio_context_spoofing_enabled = self.audio_spoofing.isChecked()

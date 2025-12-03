@@ -148,10 +148,10 @@ class SessionConfig:
         captcha_data = data.pop('captcha', {})
         
         # Filter out unknown fields from nested configs to handle version changes
-        behavior_fields = {f.name for f in BehaviorConfig.__dataclass_fields__.values()}
-        proxy_fields = {f.name for f in ProxyConfig.__dataclass_fields__.values()}
-        fingerprint_fields = {f.name for f in FingerprintConfig.__dataclass_fields__.values()}
-        captcha_fields = {f.name for f in CaptchaConfig.__dataclass_fields__.values()}
+        behavior_fields = set(BehaviorConfig.__dataclass_fields__.keys())
+        proxy_fields = set(ProxyConfig.__dataclass_fields__.keys())
+        fingerprint_fields = set(FingerprintConfig.__dataclass_fields__.keys())
+        captcha_fields = set(CaptchaConfig.__dataclass_fields__.keys())
         
         return cls(
             behavior=BehaviorConfig(**{k: v for k, v in behavior_data.items() if k in behavior_fields}),
