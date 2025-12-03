@@ -31,6 +31,21 @@ class BehaviorConfig:
     ])
     task_prompt: str = ""
     selected_routine: str = ""
+    
+    # Behavior Simulation (from fase2.txt)
+    idle_time_min_sec: float = 5.0
+    idle_time_max_sec: float = 15.0
+    mouse_jitter_enabled: bool = True
+    mouse_jitter_px: int = 5
+    scroll_simulation_enabled: bool = True
+    scroll_delta_min: int = 50
+    scroll_delta_max: int = 300
+    typing_speed_min_ms: int = 50
+    typing_speed_max_ms: int = 200
+    typing_mistake_rate: float = 0.02
+    enable_random_hover: bool = True
+    enable_random_scroll: bool = True
+    random_action_probability: float = 0.1
 
 
 @dataclass
@@ -42,6 +57,13 @@ class ProxyConfig:
     password: str = ""
     proxy_type: str = "http"  # http, https, socks5
     enabled: bool = False
+    
+    # Proxy pool and rotation settings (from fase2.txt)
+    rotation_interval: int = 10  # Rotate every N requests
+    rotation_strategy: str = "round_robin"  # round_robin, random, best_performance
+    validate_before_use: bool = True
+    auto_deactivate_failed: bool = True
+    failure_threshold: int = 5
 
 
 @dataclass
@@ -62,6 +84,28 @@ class FingerprintConfig:
     webgl_spoofing_enabled: bool = True
     audio_context_spoofing_enabled: bool = True
     font_spoofing_enabled: bool = True
+    
+    # Advanced spoofing settings (from fase2.txt - second block)
+    tls_profile: str = "chrome_120"  # chrome_110, chrome_120, firefox_121, safari_17
+    webgpu_spoofing_enabled: bool = True
+    webgpu_vendor: str = "Google Inc."
+    webgpu_architecture: str = "x86_64"
+    client_hints_enabled: bool = True
+    custom_fonts: List[str] = field(default_factory=lambda: [
+        "Arial", "Helvetica", "Times New Roman",
+        "Georgia", "Verdana", "Courier New"
+    ])
+
+
+@dataclass
+class CaptchaConfig:
+    """Configuration for CAPTCHA handling (from fase2.txt - second block)."""
+    enabled: bool = False
+    provider: str = "2captcha"  # 2captcha, anticaptcha, capsolver
+    auto_solve: bool = True
+    captcha_types: List[str] = field(default_factory=lambda: ["recaptcha_v2", "recaptcha_v3", "hcaptcha"])
+    timeout_sec: int = 120
+    max_retries: int = 3
 
 
 @dataclass
@@ -78,6 +122,12 @@ class SessionConfig:
     behavior: BehaviorConfig = field(default_factory=BehaviorConfig)
     proxy: ProxyConfig = field(default_factory=ProxyConfig)
     fingerprint: FingerprintConfig = field(default_factory=FingerprintConfig)
+    captcha: CaptchaConfig = field(default_factory=CaptchaConfig)
+    
+    # Retry settings (from fase2.txt - second block)
+    max_retries: int = 3
+    retry_delay_sec: float = 1.0
+    exponential_backoff: bool = True
     
     # Runtime state (not persisted)
     status: str = field(default="idle", repr=False)  # idle, running, paused, error
@@ -95,12 +145,20 @@ class SessionConfig:
         behavior_data = data.pop('behavior', {})
         proxy_data = data.pop('proxy', {})
         fingerprint_data = data.pop('fingerprint', {})
+        captcha_data = data.pop('captcha', {})
+        
+        # Filter out unknown fields from nested configs to handle version changes
+        behavior_fields = {f.name for f in BehaviorConfig.__dataclass_fields__.values()}
+        proxy_fields = {f.name for f in ProxyConfig.__dataclass_fields__.values()}
+        fingerprint_fields = {f.name for f in FingerprintConfig.__dataclass_fields__.values()}
+        captcha_fields = {f.name for f in CaptchaConfig.__dataclass_fields__.values()}
         
         return cls(
-            behavior=BehaviorConfig(**behavior_data),
-            proxy=ProxyConfig(**proxy_data),
-            fingerprint=FingerprintConfig(**fingerprint_data),
-            **{k: v for k, v in data.items() if k != 'status'}
+            behavior=BehaviorConfig(**{k: v for k, v in behavior_data.items() if k in behavior_fields}),
+            proxy=ProxyConfig(**{k: v for k, v in proxy_data.items() if k in proxy_fields}),
+            fingerprint=FingerprintConfig(**{k: v for k, v in fingerprint_data.items() if k in fingerprint_fields}),
+            captcha=CaptchaConfig(**{k: v for k, v in captcha_data.items() if k in captcha_fields}),
+            **{k: v for k, v in data.items() if k not in ('status',) and k in cls.__dataclass_fields__}
         )
     
     def save(self, path: Path) -> None:

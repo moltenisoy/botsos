@@ -19,12 +19,13 @@ pyyaml>=6.0.0
 
 # Security
 cryptography>=41.0.0
+keyring>=24.3.0
 
 # Async Support (Python 3.11+ has built-in, but ensures compatibility)
 aiohttp>=3.9.0
 
-# Optional: CAPTCHA Solving (uncomment if needed)
-# 2captcha-python>=1.2.0
+# CAPTCHA Solving (from fase2.txt - second block)
+2captcha-python>=1.2.0
 
 # Optional: Advanced Fingerprinting (uncomment if needed)
 # camoufox>=0.2.0
