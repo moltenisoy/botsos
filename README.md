@@ -16,6 +16,7 @@ A professional session manager for running multiple LLM-powered browser automati
 - **Professional GUI**: Modern PyQt6-based interface with dark theme
 - **LLM Integration**: Connect with local LLM models via Ollama (Llama 3.1, Qwen, Mistral, etc.)
 - **Browser Automation**: Powered by Playwright for reliable browser control
+- **QThreadPool Parallelism**: Safe parallel session execution (Phase 2)
 
 ### Anti-Detection Features
 - **Device Fingerprinting**: Customizable device profiles (Windows, macOS, Android, Linux)
@@ -23,18 +24,40 @@ A professional session manager for running multiple LLM-powered browser automati
 - **WebRTC Protection**: Block WebRTC IP leaks
 - **Audio Context Spoofing**: Randomize audio fingerprints
 - **User-Agent Randomization**: Rotate user agents from predefined pools
+- **TLS/JA3 Fingerprint Spoofing**: Mimic browser TLS signatures (Phase 2)
+- **WebGPU Spoofing**: Spoof GPU information (Phase 2)
+- **Client Hints Override**: Customize browser client hints (Phase 2)
+- **Font Spoofing**: Custom font list to avoid fingerprinting (Phase 2)
 
 ### Proxy Management
 - **Proxy Pool**: Manage a pool of proxies with rotation
 - **Multiple Protocols**: Support for HTTP, HTTPS, and SOCKS5 proxies
 - **Health Tracking**: Monitor proxy success/failure rates
 - **Smart Rotation**: Round-robin, random, or best-performance selection
+- **Proxy Validation**: Test proxies before use (Phase 2)
+- **Auto-deactivation**: Automatically disable failed proxies (Phase 2)
+
+### Behavior Simulation (Phase 2)
+- **Mouse Jitter**: Human-like mouse movement with configurable jitter
+- **Random Hover**: Simulate natural hovering behavior
+- **Scroll Simulation**: Realistic scrolling patterns
+- **Typing Simulation**: Variable keystroke delays with typo simulation
+- **Idle Time**: Random pauses between actions
+- **Random Actions**: Configurable probability for random interactions
+
+### CAPTCHA Handling (Phase 2)
+- **2Captcha Integration**: Automatic CAPTCHA solving
+- **Multiple Providers**: Support for 2captcha, anticaptcha, capsolver
+- **Supported Types**: reCAPTCHA v2/v3, hCaptcha
+- **Secure Storage**: API keys stored securely via keyring
 
 ### Session Configuration
 - **Behavior Settings**: Configure action delays, view times, and enabled actions
 - **Persistent Sessions**: Save browser cookies and state across runs
 - **Custom Routines**: Define predefined automation routines (YAML/JSON)
 - **Resource Monitoring**: Real-time CPU and RAM usage display
+- **Retry Logic**: Configurable retries with exponential backoff (Phase 2)
+- **Advanced Logging**: Rotating log files per session (Phase 2)
 
 ## 📋 Requirements
 
@@ -106,6 +129,9 @@ python main.py
    - **Behaviors**: Set LLM model, timing, and enabled actions
    - **Proxy/IP**: Configure proxy settings if needed
    - **Fingerprint**: Choose device preset and spoofing options
+   - **Advanced Spoof**: Configure TLS, WebGPU, and canvas noise (Phase 2)
+   - **Behavior Sim**: Set mouse jitter, typing speed, and idle times (Phase 2)
+   - **CAPTCHA**: Enable automatic CAPTCHA solving (Phase 2)
 3. Click "💾 Save Configuration"
 4. Click "▶️ Start Selected" to run the session
 
@@ -148,7 +174,8 @@ botsos/
 │   ├── session_config.py       # Session configuration model
 │   ├── proxy_manager.py        # Proxy pool management
 │   ├── fingerprint_manager.py  # Device fingerprint handling
-│   └── browser_session.py      # Browser automation logic
+│   ├── browser_session.py      # Browser automation logic
+│   └── advanced_features.py    # Phase 2 advanced features
 ├── data/                   # Persistent data storage
 ├── logs/                   # Application logs
 └── browser_context/        # Browser session data
@@ -190,3 +217,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Playwright](https://playwright.dev/) - Browser automation framework
 - [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) - GUI framework
 - [Ollama](https://ollama.ai/) - Local LLM runtime
+- [2Captcha](https://2captcha.com/) - CAPTCHA solving service
