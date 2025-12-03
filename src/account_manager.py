@@ -1,14 +1,14 @@
 """
-Módulo de Gestión de Cuentas
+Módulo de Gestión de Cuentas.
 
 Maneja la importación, exportación y gestión de cuentas
 con encriptación segura.
 
 Implementa características de fase5.txt:
-- Importación/exportación de cuentas desde CSV
-- Encriptación con Fernet (clave almacenada en keyring)
-- Rotación de cuentas por sesión
-- Almacenamiento seguro de credenciales
+- Importación/exportación de cuentas desde CSV.
+- Encriptación con Fernet (clave almacenada en keyring).
+- Rotación de cuentas por sesión.
+- Almacenamiento seguro de credenciales.
 
 Diseñado exclusivamente para Windows.
 """
@@ -75,13 +75,13 @@ class EncryptionManager:
     SERVICE_NAME = "botsos_accounts"
     KEY_NAME = "encryption_key"
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Inicializa el administrador de encriptación."""
         self._fernet = None
-        self._key = None
+        self._key: Optional[bytes] = None
         self._init_encryption()
     
-    def _init_encryption(self):
+    def _init_encryption(self) -> None:
         """Inicializa la encriptación."""
         try:
             from cryptography.fernet import Fernet
@@ -249,7 +249,7 @@ class AccountManager:
         # Cargar cuentas existentes
         self._load_accounts()
     
-    def _load_accounts(self):
+    def _load_accounts(self) -> None:
         """Carga las cuentas almacenadas."""
         accounts_file = self.data_dir / "accounts.enc"
         
@@ -265,7 +265,6 @@ class AccountManager:
             with open(accounts_file, 'rb') as f:
                 encrypted_data = f.read()
             
-            from cryptography.fernet import Fernet
             decrypted_data = self.encryption._fernet.decrypt(encrypted_data)
             
             import json

@@ -1,5 +1,5 @@
 """
-Módulo Administrador de Proxies
+Módulo Administrador de Proxies.
 
 Maneja la gestión del pool de proxies, rotación y validación.
 Diseñado para Windows.

@@ -1,12 +1,12 @@
 """
-Suite de Pruebas para BotSOS
+Suite de Pruebas para BotSOS.
 
 Implementa pruebas unitarias y de integración usando pytest.
 
 Implementa características de fase6.txt:
-- Tests unitarios para módulos críticos
-- Fixtures para sesiones mock
-- Tests de integración con Playwright
+- Tests unitarios para módulos críticos.
+- Fixtures para sesiones mock.
+- Tests de integración con Playwright.
 
 Diseñado exclusivamente para Windows.
 """

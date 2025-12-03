@@ -1,14 +1,14 @@
 """
-Módulo de Sistema de Plugins para Evasión
+Módulo de Sistema de Plugins para Evasión.
 
 Implementa un sistema modular de plugins para agregar nuevas
 técnicas de evasión mediante archivos YAML/JSON.
 
 Implementa características de fase6.txt:
-- Sistema modular de plugins cargados desde YAML/JSON
-- Carga dinámica de módulos de evasión
-- Bucle de retroalimentación RL básico
-- Detección de cambios en UI
+- Sistema modular de plugins cargados desde YAML/JSON.
+- Carga dinámica de módulos de evasión.
+- Bucle de retroalimentación RL básico.
+- Detección de cambios en UI.
 
 Diseñado exclusivamente para Windows.
 """

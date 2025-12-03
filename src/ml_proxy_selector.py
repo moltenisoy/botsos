@@ -1,14 +1,14 @@
 """
-Módulo de Selección de Proxy con ML
+Módulo de Selección de Proxy con ML.
 
 Usa Machine Learning para predecir el mejor proxy basado
 en historial de rendimiento.
 
 Implementa características de fase5.txt:
-- Modelo de predicción (Random Forest, Gradient Boosting)
-- Entrenamiento en datos históricos
-- Selección inteligente basada en contexto
-- Fallback a estrategias tradicionales
+- Modelo de predicción (Random Forest, Gradient Boosting).
+- Entrenamiento en datos históricos.
+- Selección inteligente basada en contexto.
+- Fallback a estrategias tradicionales.
 
 Diseñado exclusivamente para Windows.
 """

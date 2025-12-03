@@ -1,5 +1,5 @@
 """
-Módulo de Configuración de Sesión
+Módulo de Configuración de Sesión.
 
 Maneja el modelo de datos de configuración de sesión y persistencia.
 Diseñado para Windows.

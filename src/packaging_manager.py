@@ -1,12 +1,12 @@
 """
-Módulo de Empaquetado y Distribución
+Módulo de Empaquetado y Distribución.
 
 Implementa empaquetado para distribución en Windows usando PyInstaller.
 
 Implementa características de fase6.txt:
-- Configuración PyInstaller para ejecutable Windows
-- Bundling de dependencias y recursos
-- Verificación de requisitos antes de build
+- Configuración PyInstaller para ejecutable Windows.
+- Bundling de dependencias y recursos.
+- Verificación de requisitos antes de build.
 
 Diseñado exclusivamente para Windows.
 """

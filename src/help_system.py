@@ -1,15 +1,15 @@
 """
-Módulo de Documentación y Ayuda
+Módulo de Documentación y Ayuda.
 
 Implementa sistema de documentación integrada incluyendo:
-- Tooltips contextuales para todos los campos de la GUI
-- Asistente de inicio para nuevos usuarios
-- Sistema de ayuda en tiempo real
+- Tooltips contextuales para todos los campos de la GUI.
+- Asistente de inicio para nuevos usuarios.
+- Sistema de ayuda en tiempo real.
 
 Implementa características de fase6.txt:
-- Tooltips en cada campo de la GUI
-- Asistente de bienvenida con tutorial paso a paso
-- Generación de documentación desde docstrings
+- Tooltips en cada campo de la GUI.
+- Asistente de bienvenida con tutorial paso a paso.
+- Generación de documentación desde docstrings.
 
 Diseñado exclusivamente para Windows.
 """

@@ -1,5 +1,5 @@
 """
-BotSOS - Administrador de Automatización de YouTube Multi-Sesión
+BotSOS - Administrador de Automatización de YouTube Multi-Sesión.
 
 Un administrador de sesiones profesional para ejecutar múltiples instancias
 de automatización de navegador con LLM, con características avanzadas de anti-detección.
@@ -8,24 +8,24 @@ Versión: 1.0.0
 Diseñado exclusivamente para Windows.
 
 Implementa características de fase2.txt, fase3.txt, fase5.txt y fase6.txt:
-- Gestión multi-sesión con QThreadPool
-- Suplantación avanzada de huella digital (TLS, WebGPU, Canvas, Audio)
-- Simulación de comportamiento (movimiento del ratón, escritura, desplazamiento)
-- Manejo de CAPTCHA con integración de 2Captcha
-- Validación y rotación de proxies
-- Almacenamiento seguro de credenciales
-- Registro en tiempo real con rotación
-- Planificación de contingencia y recuperación (fase3.txt)
-- Ocultación del sistema y bloqueo de puertos (fase3.txt)
-- Detección de anomalías y monitoreo (fase3.txt)
-- Huella digital polimórfica (fase3.txt)
-- Escalabilidad Docker/AWS (fase5.txt)
-- Analíticas con Prometheus (fase5.txt)
-- Selección de proxy con ML (fase5.txt)
-- Sistema de plugins de evasión (fase6.txt)
-- Gestión específica de Windows (fase6.txt)
-- Sistema de ayuda y tooltips (fase6.txt)
-- Empaquetado para distribución (fase6.txt)
+- Gestión multi-sesión con QThreadPool.
+- Suplantación avanzada de huella digital (TLS, WebGPU, Canvas, Audio).
+- Simulación de comportamiento (movimiento del ratón, escritura, desplazamiento).
+- Manejo de CAPTCHA con integración de 2Captcha.
+- Validación y rotación de proxies.
+- Almacenamiento seguro de credenciales.
+- Registro en tiempo real con rotación.
+- Planificación de contingencia y recuperación (fase3.txt).
+- Ocultación del sistema y bloqueo de puertos (fase3.txt).
+- Detección de anomalías y monitoreo (fase3.txt).
+- Huella digital polimórfica (fase3.txt).
+- Escalabilidad Docker/AWS (fase5.txt).
+- Analíticas con Prometheus (fase5.txt).
+- Selección de proxy con ML (fase5.txt).
+- Sistema de plugins de evasión (fase6.txt).
+- Gestión específica de Windows (fase6.txt).
+- Sistema de ayuda y tooltips (fase6.txt).
+- Empaquetado para distribución (fase6.txt).
 """
 
 __version__ = "1.0.0"
