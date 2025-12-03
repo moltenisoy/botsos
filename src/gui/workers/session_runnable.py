@@ -9,7 +9,15 @@ Diseñado exclusivamente para Windows.
 
 from PyQt6.QtCore import QRunnable, QObject, pyqtSignal
 
-from ..session_config import SessionConfig
+# Use try/except for flexible imports
+try:
+    from src.session_config import SessionConfig
+except ImportError:
+    try:
+        from session_config import SessionConfig
+    except ImportError:
+        from ..session_config import SessionConfig
+
 from .base_worker import BaseSessionExecutor
 
 

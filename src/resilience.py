@@ -356,8 +356,8 @@ class CachedLLMClient:
         self._client = None
     
     def _get_cache_key(self, prompt: str) -> str:
-        """Generar clave de caché para un prompt."""
-        return hashlib.md5(prompt.encode()).hexdigest()
+        """Generar clave de caché para un prompt usando SHA-256."""
+        return hashlib.sha256(prompt.encode()).hexdigest()
     
     async def generate(self, prompt: str, use_cache: bool = True) -> str:
         """

@@ -100,7 +100,14 @@ class BaseSessionExecutor(ABC):
         session_id = self.session_config.session_id
         
         try:
-            from ..advanced_features import RetryManager, BehaviorSimulator, BehaviorSimulationConfig
+            # Use flexible imports for advanced_features
+            try:
+                from src.advanced_features import RetryManager, BehaviorSimulator, BehaviorSimulationConfig
+            except ImportError:
+                try:
+                    from advanced_features import RetryManager, BehaviorSimulator, BehaviorSimulationConfig
+                except ImportError:
+                    from ..advanced_features import RetryManager, BehaviorSimulator, BehaviorSimulationConfig
             
             self._retry_manager = RetryManager(
                 max_retries=self.session_config.max_retries,

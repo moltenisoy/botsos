@@ -49,14 +49,6 @@ class InputValidator:
         r'(?:\d{1,3}\.){3}\d{1,3})$'
     )
     
-    CRON_PATTERN = re.compile(
-        r'^(\*|([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])|\*\/([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]))'
-        r' (\*|([0-9]|1[0-9]|2[0-3])|\*\/([0-9]|1[0-9]|2[0-3]))'
-        r' (\*|([1-9]|1[0-9]|2[0-9]|3[0-1])|\*\/([1-9]|1[0-9]|2[0-9]|3[0-1]))'
-        r' (\*|([1-9]|1[0-2])|\*\/([1-9]|1[0-2]))'
-        r' (\*|([0-6])|\*\/([0-6]))$'
-    )
-    
     TIME_PATTERN = re.compile(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')
     
     EMAIL_PATTERN = re.compile(
@@ -79,8 +71,6 @@ class InputValidator:
         
         if not name:
             errors.append("El nombre de sesión no puede estar vacío")
-        elif len(name) < 1:
-            errors.append("El nombre de sesión debe tener al menos 1 carácter")
         elif len(name) > 100:
             errors.append("El nombre de sesión no puede exceder 100 caracteres")
         
