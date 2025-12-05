@@ -17,7 +17,7 @@ Se aplicaron los siguientes 5 métodos funcionales de análisis de código:
 ### 2. **Análisis de Importaciones y Dependencias**
 - Detección de imports duplicados usando AST parsing
 - **Hallazgos:** Imports duplicados menores en 15 archivos (funcionales, no críticos)
-- Archivos afectados: `session_manager_gui.py`, `advanced_features.py`, `main.py`, etc.
+- Archivos afectados: `session_manager_gui.py`, `advanced_features.py`, `main.py`, `ml_proxy_selector.py`, `plugin_system.py`, `vpn_manager.py`, `analytics_manager.py`, `scheduler_manager.py`, `infrastructure.py`, `account_manager.py`, `help_system.py`, y módulos en `src/gui/`
 
 ### 3. **Análisis de Tests y Cobertura**
 - Ejecución completa de suite pytest
@@ -27,7 +27,7 @@ Se aplicaron los siguientes 5 métodos funcionales de análisis de código:
 ### 4. **Análisis de Archivos Obsoletos**
 - Revisión de archivos no utilizados o residuales
 - **Hallazgos:**
-  - `basebot.py` - Archivo obsoleto eliminado (usaba `browser_use` API deprecated)
+  - `basebot.py` - Archivo obsoleto eliminado (usaba `browser_use`, una biblioteca externa no incluida en el proyecto)
   - `fase*.txt` - Archivos de documentación de fases (conservados como referencia)
 
 ### 5. **Análisis de Estructura GUI**
@@ -498,7 +498,7 @@ async def get_metrics():
 4. ✅ Actualizado docstring del módulo `browser_session.py` a "exclusivamente para Windows"
 5. ✅ Actualizado docstring del módulo `proxy_manager.py` a "exclusivamente para Windows"
 6. ✅ Verificados tests (56 pasan, 2 fallan por pytest-asyncio no instalado)
-7. ✅ Eliminado `basebot.py` - Archivo obsoleto que usaba API `browser_use` deprecated (2025-12-05)
+7. ✅ Eliminado `basebot.py` - Archivo obsoleto que usaba biblioteca `browser_use` no incluida en el proyecto (2025-12-05)
 8. ✅ Verificación completa: 113 tests pasan (2025-12-05)
 
 ---
