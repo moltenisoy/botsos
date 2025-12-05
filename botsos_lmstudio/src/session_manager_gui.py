@@ -4,6 +4,8 @@ Módulo de Interfaz Gráfica del Administrador de Sesiones
 Interfaz gráfica profesional basada en PyQt6 para gestionar
 múltiples sesiones de automatización de navegador con LLM.
 
+Adaptado para usar LM Studio como backend de LLM.
+
 Diseñado exclusivamente para Windows.
 
 Implementa características de fase2.txt:
@@ -27,6 +29,13 @@ try:
     PSUTIL_AVAILABLE = True
 except ImportError:
     PSUTIL_AVAILABLE = False
+
+# OpenAI library for LM Studio API
+try:
+    import openai
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -723,9 +732,15 @@ class SessionManagerGUI(QMainWindow):
     
     def _refresh_lmstudio_models(self):
         """Detectar modelos disponibles en LM Studio."""
+        if not OPENAI_AVAILABLE:
+            QMessageBox.warning(
+                self, "Dependencia Faltante",
+                "El paquete 'openai' no está instalado.\n"
+                "Instale con: pip install openai"
+            )
+            return
+        
         try:
-            import openai
-            
             url = self.lmstudio_url.text().strip()
             if not url:
                 url = "http://localhost:1234/v1"

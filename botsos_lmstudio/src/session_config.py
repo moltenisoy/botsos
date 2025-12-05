@@ -15,14 +15,34 @@ from pathlib import Path
 
 @dataclass
 class BehaviorConfig:
-    """Configuration for session behavior settings."""
-    # LM Studio uses model names loaded in the application
-    # Model name will be detected from local LM Studio server
+    """Configuration for session behavior settings.
+    
+    Includes LM Studio configuration for local LLM integration.
+    """
+    # LM Studio Configuration
+    # -----------------------
+    # llm_model: Name of the model loaded in LM Studio. Use "local-model" to auto-detect
+    #            or specify the exact model name (e.g., "llama-2-7b-chat").
     llm_model: str = "local-model"
-    llm_backend: str = "lmstudio"  # lmstudio backend
+    
+    # llm_backend: The LLM backend to use. For this version, always "lmstudio".
+    llm_backend: str = "lmstudio"
+    
+    # lmstudio_url: URL of the LM Studio local server. Default is http://localhost:1234/v1
+    #               The server must be running before starting sessions.
     lmstudio_url: str = "http://localhost:1234/v1"
+    
+    # lmstudio_temperature: Controls randomness of LLM responses.
+    #                       Range: 0.0 (deterministic) to 2.0 (very random).
+    #                       Recommended: 0.7 for balanced creativity.
     lmstudio_temperature: float = 0.7
+    
+    # lmstudio_max_tokens: Maximum number of tokens to generate in LLM responses.
+    #                      Range: 256 to 8192 (depends on model context window).
+    #                      Higher values allow longer responses but use more memory.
     lmstudio_max_tokens: int = 2048
+    
+    # Session Timing Configuration
     ad_skip_delay_sec: int = 5
     view_time_min_sec: int = 30
     view_time_max_sec: int = 120
