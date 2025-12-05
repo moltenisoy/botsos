@@ -1,0 +1,24 @@
+# Plugin de ejemplo: Jitter Avanzado
+# Este archivo demuestra cómo crear plugins personalizados
+
+name: "Jitter Avanzado Personalizado"
+version: "1.0.0"
+description: "Plugin de jitter con parámetros personalizados para mayor evasión"
+author: "BotSOS"
+category: "evasion"
+enabled: true
+priority: 3
+
+# Tipo de plugin (debe coincidir con un plugin incorporado)
+type: jitter
+
+# Configuración del plugin
+config:
+  # Píxeles máximos de jitter
+  jitter_px: 8
+  
+  # Habilitar adaptación automática basada en tasa de éxito
+  adaptive: true
+  
+  # Factor de incremento cuando hay muchos fallos
+  adaptive_factor: 1.5

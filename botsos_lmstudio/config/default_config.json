@@ -1,0 +1,76 @@
+{
+  "session_defaults": {
+    "llm_model": "local-model",
+    "llm_backend": "lmstudio",
+    "lmstudio_url": "http://localhost:1234/v1",
+    "headless": false,
+    "browser_type": "chromium",
+    "persistent_context": true,
+    "context_dir": "browser_context"
+  },
+  "lmstudio_settings": {
+    "base_url": "http://localhost:1234/v1",
+    "api_key": "lm-studio",
+    "timeout_sec": 120,
+    "max_tokens": 2048,
+    "temperature": 0.7,
+    "recommended_models": [
+      "llama-2-7b-chat",
+      "mistral-7b-instruct-v0.2",
+      "phi-3-mini-4k-instruct",
+      "qwen-7b-chat",
+      "gemma-7b-it",
+      "codellama-7b-instruct",
+      "openchat-3.5-7b"
+    ]
+  },
+  "behavior_defaults": {
+    "ad_skip_delay_sec": 5,
+    "view_time_min_sec": 30,
+    "view_time_max_sec": 120,
+    "action_delay_min_ms": 100,
+    "action_delay_max_ms": 500,
+    "enable_like": true,
+    "enable_comment": true,
+    "enable_subscribe": false,
+    "enable_skip_ads": true,
+    "comment_phrases": [
+      "¡Excelente video! Gracias por compartir.",
+      "Muy buen contenido, sigue así.",
+      "Interesante información, gracias.",
+      "Me encantó este video.",
+      "Contenido de calidad como siempre.",
+      "¡Muy buena explicación!",
+      "Increíble contenido, felicidades."
+    ]
+  },
+  "proxy_defaults": {
+    "type": "http",
+    "rotation_interval_requests": 10,
+    "timeout_sec": 30,
+    "retry_count": 3
+  },
+  "fingerprint_defaults": {
+    "device_preset": "windows_desktop",
+    "randomize_on_start": true,
+    "canvas_noise_enabled": true,
+    "webrtc_protection_enabled": true
+  },
+  "logging": {
+    "level": "INFO",
+    "max_file_size_mb": 10,
+    "backup_count": 5,
+    "log_to_console": true,
+    "log_to_file": true
+  },
+  "resource_limits": {
+    "max_concurrent_sessions": 6,
+    "max_ram_usage_percent": 80,
+    "max_cpu_usage_percent": 85,
+    "session_timeout_min": 60
+  },
+  "platform": {
+    "supported": ["Windows"],
+    "required_os_version": "Windows 10+"
+  }
+}

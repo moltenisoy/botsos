@@ -1,0 +1,23 @@
+{
+  "name": "Detector de Cambios UI YouTube",
+  "version": "1.0.0",
+  "description": "Detecta cambios en los selectores de YouTube y encuentra alternativas",
+  "author": "BotSOS",
+  "category": "detection",
+  "enabled": true,
+  "priority": 1,
+  "type": "ui_change_detector",
+  "config": {
+    "selectors": {
+      "skip_ad": "button.ytp-ad-skip-button",
+      "skip_ad_alt": "button.ytp-ad-skip-button-modern",
+      "like_button": "button[aria-label*='like']",
+      "dislike_button": "button[aria-label*='dislike']",
+      "subscribe": "ytd-subscribe-button-renderer button",
+      "comment_box": "ytd-comments #placeholder-area",
+      "comment_input": "ytd-commentbox #contenteditable-root",
+      "video_player": "video.html5-main-video",
+      "search_box": "input[name='search_query']"
+    }
+  }
+}
