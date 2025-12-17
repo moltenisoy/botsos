@@ -374,7 +374,7 @@ class SessionConfig:
     browser_type: str = "chromium"
     persistent_context: bool = True
     context_dir: str = "browser_context"
-    # Integración de red por sesión
+    # Per-session network integration
     vpn_config_id: str = ""
     bridge_config_id: str = ""
     

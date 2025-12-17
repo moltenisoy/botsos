@@ -608,9 +608,11 @@ class SessionManagerGUI(QMainWindow):
         layout = QFormLayout(group)
 
         self.vpn_profile_combo = QComboBox()
+        self.vpn_profile_combo.currentIndexChanged.connect(self._on_network_assignment_changed)
         layout.addRow("Perfil VPN:", self.vpn_profile_combo)
 
         self.bridge_profile_combo = QComboBox()
+        self.bridge_profile_combo.currentIndexChanged.connect(self._on_network_assignment_changed)
         layout.addRow("Puente:", self.bridge_profile_combo)
 
         refresh_btn = QPushButton("↻ Actualizar Perfiles")
@@ -2392,8 +2394,10 @@ Proxies:
         self.bridge_profile_combo.addItem("Sin puente", "")
 
         try:
-            from .vpn_manager import VPNManager
-            manager = VPNManager(self.data_dir / "vpn")
+            if not hasattr(self, "_vpn_profile_manager"):
+                from .vpn_manager import VPNManager
+                self._vpn_profile_manager = VPNManager(self.data_dir / "vpn")
+            manager = self._vpn_profile_manager
             for config in manager.get_all_vpn_configs():
                 display = config.name or config.config_id
                 self.vpn_profile_combo.addItem(display, config.config_id)
@@ -2403,6 +2407,13 @@ Proxies:
                 self.bridge_profile_combo.addItem(display, bridge.config_id)
         except Exception as e:
             logger.warning(f"Error actualizando perfiles VPN/Puente: {e}")
+
+    def _on_network_assignment_changed(self):
+        """Sincroniza la selección de VPN/puente con la sesión actual."""
+        if not (self._vpn_ui_available() and self.current_session):
+            return
+        self.current_session.vpn_config_id = self.vpn_profile_combo.currentData() or ""
+        self.current_session.bridge_config_id = self.bridge_profile_combo.currentData() or ""
     
     def _on_session_selected(self, item: QListWidgetItem):
         """Manejar selección de sesión."""
@@ -2447,7 +2458,8 @@ Proxies:
         self.proxy_pass.setText(proxy.password)
 
         if self._vpn_ui_available():
-            self._refresh_vpn_profiles()
+            if self.vpn_profile_combo.count() == 0:
+                self._refresh_vpn_profiles()
             vpn_index = self.vpn_profile_combo.findData(session.vpn_config_id or "")
             self.vpn_profile_combo.setCurrentIndex(vpn_index if vpn_index >= 0 else 0)
 
