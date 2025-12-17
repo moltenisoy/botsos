@@ -586,7 +586,7 @@ class SessionManagerGUI(QMainWindow):
         return panel
 
     def _wrap_sections(self, widgets: List[QWidget]) -> QWidget:
-        """Wrap multiple sections inside a scrollable area."""
+        """Wrap the provided widgets in a vertical layout inside a scrollable QScrollArea."""
         container = QWidget()
         container_layout = QVBoxLayout(container)
         container_layout.setSpacing(12)
@@ -601,7 +601,7 @@ class SessionManagerGUI(QMainWindow):
         return scroll
 
     def _build_session_panel(self) -> QWidget:
-        """Compact panel with the core session sections."""
+        """Return a scrollable panel bundling behavior, simulation, CAPTCHA, and fingerprint sections."""
         sections = [
             self._create_behavior_tab(),
             self._create_behavior_simulation_tab(),
@@ -631,7 +631,7 @@ class SessionManagerGUI(QMainWindow):
         return group
 
     def _build_network_panel(self) -> QWidget:
-        """Single panel for network, VPN, and proxies."""
+        """Single network panel; includes VPN selectors and bridge controls when available plus the proxy settings."""
         sections = []
         if VPN_BRIDGE_AVAILABLE:
             self.vpn_bridge_tab = VPNBridgeTab(self.data_dir, self)
@@ -643,7 +643,7 @@ class SessionManagerGUI(QMainWindow):
         return self._wrap_sections(sections)
 
     def _build_advanced_panel(self) -> QWidget:
-        """Consolidated panel with all advanced options."""
+        """Consolidated panel containing advanced spoofing, contingency, system, scaling, analytics, accounts, and logging sections."""
         sections = [
             self._create_advanced_spoof_tab(),
             self._create_contingency_tab(),
