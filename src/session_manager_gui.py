@@ -578,7 +578,7 @@ class SessionManagerGUI(QMainWindow):
         return panel
 
     def _wrap_sections(self, widgets: List[QWidget]) -> QWidget:
-        """Envuelve múltiples secciones en un área desplazable."""
+        """Wrap multiple sections inside a scrollable area."""
         container = QWidget()
         container_layout = QVBoxLayout(container)
         container_layout.setSpacing(12)
@@ -593,7 +593,7 @@ class SessionManagerGUI(QMainWindow):
         return scroll
 
     def _build_session_panel(self) -> QWidget:
-        """Panel compacto con las secciones principales de la sesión."""
+        """Compact panel with the core session sections."""
         sections = [
             self._create_behavior_tab(),
             self._create_behavior_simulation_tab(),
@@ -603,7 +603,7 @@ class SessionManagerGUI(QMainWindow):
         return self._wrap_sections(sections)
 
     def _create_network_assignment_group(self) -> QWidget:
-        """Selector rápido de VPN/Puente por sesión."""
+        """Quick selector for per-session VPN/bridge assignments."""
         group = QGroupBox("Asignación de Red por Sesión")
         layout = QFormLayout(group)
 
@@ -623,7 +623,7 @@ class SessionManagerGUI(QMainWindow):
         return group
 
     def _build_network_panel(self) -> QWidget:
-        """Panel único para red, VPN y proxies."""
+        """Single panel for network, VPN, and proxies."""
         sections = []
         if VPN_BRIDGE_AVAILABLE:
             self.vpn_bridge_tab = VPNBridgeTab(self.data_dir, self)
@@ -635,7 +635,7 @@ class SessionManagerGUI(QMainWindow):
         return self._wrap_sections(sections)
 
     def _build_advanced_panel(self) -> QWidget:
-        """Panel consolidado con las opciones avanzadas."""
+        """Consolidated panel with all advanced options."""
         sections = [
             self._create_advanced_spoof_tab(),
             self._create_contingency_tab(),
@@ -2379,11 +2379,11 @@ Proxies:
             self.proxy_pool_list.addItem(f"{status} {proxy.server}:{proxy.port}")
 
     def _vpn_ui_available(self) -> bool:
-        """Indica si la UI de VPN/puentes está disponible."""
+        """Return True when VPN/bridge UI elements exist and can be used."""
         return VPN_BRIDGE_AVAILABLE and hasattr(self, "vpn_profile_combo") and hasattr(self, "vpn_bridge_tab")
 
     def _refresh_vpn_profiles(self):
-        """Actualizar las listas de perfiles VPN y puentes disponibles."""
+        """Refresh the available VPN and bridge profile lists."""
         if not self._vpn_ui_available():
             return
 
@@ -2406,10 +2406,10 @@ Proxies:
                 display = bridge.name or bridge.config_id
                 self.bridge_profile_combo.addItem(display, bridge.config_id)
         except Exception as e:
-            logger.warning(f"Error actualizando perfiles VPN/Puente: {e}")
+            logger.warning(f"Error refreshing VPN/Bridge profiles: {e}")
 
     def _on_network_assignment_changed(self):
-        """Sincroniza la selección de VPN/puente con la sesión actual."""
+        """Sync VPN/bridge selection with the current session."""
         if not (self._vpn_ui_available() and self.current_session):
             return
         self.current_session.vpn_config_id = self.vpn_profile_combo.currentData() or ""
