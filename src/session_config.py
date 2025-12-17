@@ -374,6 +374,9 @@ class SessionConfig:
     browser_type: str = "chromium"
     persistent_context: bool = True
     context_dir: str = "browser_context"
+    # Per-session network integration
+    vpn_config_id: str = ""
+    bridge_config_id: str = ""
     
     behavior: BehaviorConfig = field(default_factory=BehaviorConfig)
     proxy: ProxyConfig = field(default_factory=ProxyConfig)
