@@ -19,7 +19,7 @@ import sys
 import logging
 import asyncio
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from logging.handlers import RotatingFileHandler
 
 try:
@@ -577,7 +577,7 @@ class SessionManagerGUI(QMainWindow):
         
         return panel
 
-    def _wrap_sections(self, widgets: list[QWidget]) -> QWidget:
+    def _wrap_sections(self, widgets: List[QWidget]) -> QWidget:
         """Envuelve múltiples secciones en un área desplazable."""
         container = QWidget()
         container_layout = QVBoxLayout(container)
@@ -2376,9 +2376,13 @@ Proxies:
             status = "✅" if proxy.is_active else "❌"
             self.proxy_pool_list.addItem(f"{status} {proxy.server}:{proxy.port}")
 
+    def _vpn_ui_available(self) -> bool:
+        """Indica si la UI de VPN/puentes está disponible."""
+        return VPN_BRIDGE_AVAILABLE and hasattr(self, "vpn_profile_combo") and hasattr(self, "vpn_bridge_tab")
+
     def _refresh_vpn_profiles(self):
         """Actualizar las listas de perfiles VPN y puentes disponibles."""
-        if not (VPN_BRIDGE_AVAILABLE and hasattr(self, "vpn_profile_combo") and hasattr(self, "vpn_bridge_tab")):
+        if not self._vpn_ui_available():
             return
 
         self.vpn_profile_combo.clear()
@@ -2388,7 +2392,8 @@ Proxies:
         self.bridge_profile_combo.addItem("Sin puente", "")
 
         try:
-            manager = self.vpn_bridge_tab._get_vpn_manager()
+            from .vpn_manager import VPNManager
+            manager = VPNManager(self.data_dir / "vpn")
             for config in manager.get_all_vpn_configs():
                 display = config.name or config.config_id
                 self.vpn_profile_combo.addItem(display, config.config_id)
@@ -2441,7 +2446,7 @@ Proxies:
         self.proxy_user.setText(proxy.username)
         self.proxy_pass.setText(proxy.password)
 
-        if VPN_BRIDGE_AVAILABLE and hasattr(self, "vpn_profile_combo"):
+        if self._vpn_ui_available():
             self._refresh_vpn_profiles()
             vpn_index = self.vpn_profile_combo.findData(session.vpn_config_id or "")
             self.vpn_profile_combo.setCurrentIndex(vpn_index if vpn_index >= 0 else 0)
@@ -2753,7 +2758,7 @@ Proxies:
         session.proxy.username = self.proxy_user.text()
         session.proxy.password = self.proxy_pass.text()
 
-        if VPN_BRIDGE_AVAILABLE and hasattr(self, "vpn_profile_combo"):
+        if self._vpn_ui_available():
             session.vpn_config_id = self.vpn_profile_combo.currentData() or ""
             session.bridge_config_id = self.bridge_profile_combo.currentData() or ""
         
