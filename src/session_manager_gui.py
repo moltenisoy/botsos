@@ -33,7 +33,7 @@ from PyQt6.QtWidgets import (
     QTabWidget, QListWidget, QListWidgetItem, QPushButton, QLabel,
     QFormLayout, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QTextEdit,
     QCheckBox, QGroupBox, QSplitter, QStatusBar, QMessageBox,
-    QFileDialog, QProgressBar, QSlider
+    QFileDialog, QProgressBar, QSlider, QScrollArea
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QThreadPool, QRunnable, QObject
 from PyQt6.QtGui import QFont
@@ -564,30 +564,9 @@ class SessionManagerGUI(QMainWindow):
         
         # Pestañas de configuración
         self.config_tabs = QTabWidget()
-        # Pestaña de VPN/Puentes (nueva funcionalidad principal)
-        if VPN_BRIDGE_AVAILABLE:
-            self.vpn_bridge_tab = VPNBridgeTab(self.data_dir, self)
-            self.vpn_bridge_tab.vpn_connected.connect(self._on_vpn_connected)
-            self.vpn_bridge_tab.vpn_disconnected.connect(self._on_vpn_disconnected)
-            self.config_tabs.addTab(self.vpn_bridge_tab, "🔐 VPN/Puentes")
-        self.config_tabs.addTab(self._create_behavior_tab(), "🎮 Comportamientos")
-        self.config_tabs.addTab(self._create_proxy_tab(), "🌐 Proxy/IP")
-        self.config_tabs.addTab(self._create_fingerprint_tab(), "🖥️ Huella Digital")
-        self.config_tabs.addTab(self._create_advanced_spoof_tab(), "🔒 Suplantación Avanzada")
-        self.config_tabs.addTab(self._create_behavior_simulation_tab(), "🤖 Simulación de Comportamiento")
-        self.config_tabs.addTab(self._create_captcha_tab(), "🔑 CAPTCHA")
-        # Pestañas de Fase 3
-        self.config_tabs.addTab(self._create_contingency_tab(), "🛡️ Contingencia")
-        self.config_tabs.addTab(self._create_advanced_behavior_tab(), "⚡ Comportamiento Avanzado")
-        self.config_tabs.addTab(self._create_system_hiding_tab(), "🔐 Ocultación del Sistema")
-        # Pestañas de Fase 5
-        self.config_tabs.addTab(self._create_scaling_tab(), "☁️ Escalabilidad/Cloud")
-        self.config_tabs.addTab(self._create_performance_tab(), "⚡ Rendimiento")
-        self.config_tabs.addTab(self._create_ml_evasion_tab(), "🧠 Evasión ML")
-        self.config_tabs.addTab(self._create_scheduling_tab(), "⏰ Programación")
-        self.config_tabs.addTab(self._create_analytics_tab(), "📊 Analíticas")
-        self.config_tabs.addTab(self._create_accounts_tab(), "👤 Cuentas")
-        self.config_tabs.addTab(self._create_logging_tab(), "📝 Registros")
+        self.config_tabs.addTab(self._build_session_panel(), "🎛️ Sesión")
+        self.config_tabs.addTab(self._build_network_panel(), "🌐 Red/VPN")
+        self.config_tabs.addTab(self._build_advanced_panel(), "⚙️ Avanzado")
         layout.addWidget(self.config_tabs)
         
         # Botón de guardar
@@ -597,6 +576,78 @@ class SessionManagerGUI(QMainWindow):
         layout.addWidget(save_btn)
         
         return panel
+
+    def _wrap_sections(self, widgets: list[QWidget]) -> QWidget:
+        """Envuelve múltiples secciones en un área desplazable."""
+        container = QWidget()
+        container_layout = QVBoxLayout(container)
+        container_layout.setSpacing(12)
+        for widget in widgets:
+            container_layout.addWidget(widget)
+        container_layout.addStretch()
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(container)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        return scroll
+
+    def _build_session_panel(self) -> QWidget:
+        """Panel compacto con las secciones principales de la sesión."""
+        sections = [
+            self._create_behavior_tab(),
+            self._create_behavior_simulation_tab(),
+            self._create_captcha_tab(),
+            self._create_fingerprint_tab(),
+        ]
+        return self._wrap_sections(sections)
+
+    def _create_network_assignment_group(self) -> QWidget:
+        """Selector rápido de VPN/Puente por sesión."""
+        group = QGroupBox("Asignación de Red por Sesión")
+        layout = QFormLayout(group)
+
+        self.vpn_profile_combo = QComboBox()
+        layout.addRow("Perfil VPN:", self.vpn_profile_combo)
+
+        self.bridge_profile_combo = QComboBox()
+        layout.addRow("Puente:", self.bridge_profile_combo)
+
+        refresh_btn = QPushButton("↻ Actualizar Perfiles")
+        refresh_btn.clicked.connect(self._refresh_vpn_profiles)
+        layout.addRow(refresh_btn)
+
+        self._refresh_vpn_profiles()
+        return group
+
+    def _build_network_panel(self) -> QWidget:
+        """Panel único para red, VPN y proxies."""
+        sections = []
+        if VPN_BRIDGE_AVAILABLE:
+            self.vpn_bridge_tab = VPNBridgeTab(self.data_dir, self)
+            self.vpn_bridge_tab.vpn_connected.connect(self._on_vpn_connected)
+            self.vpn_bridge_tab.vpn_disconnected.connect(self._on_vpn_disconnected)
+            sections.append(self._create_network_assignment_group())
+            sections.append(self.vpn_bridge_tab)
+        sections.append(self._create_proxy_tab())
+        return self._wrap_sections(sections)
+
+    def _build_advanced_panel(self) -> QWidget:
+        """Panel consolidado con las opciones avanzadas."""
+        sections = [
+            self._create_advanced_spoof_tab(),
+            self._create_contingency_tab(),
+            self._create_advanced_behavior_tab(),
+            self._create_system_hiding_tab(),
+            self._create_scaling_tab(),
+            self._create_performance_tab(),
+            self._create_ml_evasion_tab(),
+            self._create_scheduling_tab(),
+            self._create_analytics_tab(),
+            self._create_accounts_tab(),
+            self._create_logging_tab(),
+        ]
+        return self._wrap_sections(sections)
     
     def _create_behavior_tab(self) -> QWidget:
         """Crear la pestaña de configuración de comportamiento."""
@@ -2324,6 +2375,29 @@ Proxies:
         for proxy in self.proxy_manager.get_all_proxies():
             status = "✅" if proxy.is_active else "❌"
             self.proxy_pool_list.addItem(f"{status} {proxy.server}:{proxy.port}")
+
+    def _refresh_vpn_profiles(self):
+        """Actualizar las listas de perfiles VPN y puentes disponibles."""
+        if not (VPN_BRIDGE_AVAILABLE and hasattr(self, "vpn_profile_combo") and hasattr(self, "vpn_bridge_tab")):
+            return
+
+        self.vpn_profile_combo.clear()
+        self.bridge_profile_combo.clear()
+
+        self.vpn_profile_combo.addItem("Sin VPN", "")
+        self.bridge_profile_combo.addItem("Sin puente", "")
+
+        try:
+            manager = self.vpn_bridge_tab._get_vpn_manager()
+            for config in manager.get_all_vpn_configs():
+                display = config.name or config.config_id
+                self.vpn_profile_combo.addItem(display, config.config_id)
+
+            for bridge in manager.get_all_bridge_configs():
+                display = bridge.name or bridge.config_id
+                self.bridge_profile_combo.addItem(display, bridge.config_id)
+        except Exception as e:
+            logger.warning(f"Error actualizando perfiles VPN/Puente: {e}")
     
     def _on_session_selected(self, item: QListWidgetItem):
         """Manejar selección de sesión."""
@@ -2366,6 +2440,14 @@ Proxies:
         self.proxy_port.setValue(proxy.port if proxy.port > 0 else 8080)
         self.proxy_user.setText(proxy.username)
         self.proxy_pass.setText(proxy.password)
+
+        if VPN_BRIDGE_AVAILABLE and hasattr(self, "vpn_profile_combo"):
+            self._refresh_vpn_profiles()
+            vpn_index = self.vpn_profile_combo.findData(session.vpn_config_id or "")
+            self.vpn_profile_combo.setCurrentIndex(vpn_index if vpn_index >= 0 else 0)
+
+            bridge_index = self.bridge_profile_combo.findData(session.bridge_config_id or "")
+            self.bridge_profile_combo.setCurrentIndex(bridge_index if bridge_index >= 0 else 0)
         
         # Fingerprint
         fp = session.fingerprint
@@ -2670,6 +2752,10 @@ Proxies:
         session.proxy.port = self.proxy_port.value()
         session.proxy.username = self.proxy_user.text()
         session.proxy.password = self.proxy_pass.text()
+
+        if VPN_BRIDGE_AVAILABLE and hasattr(self, "vpn_profile_combo"):
+            session.vpn_config_id = self.vpn_profile_combo.currentData() or ""
+            session.bridge_config_id = self.bridge_profile_combo.currentData() or ""
         
         # Update fingerprint
         session.fingerprint.device_preset = self.device_preset.currentData()
